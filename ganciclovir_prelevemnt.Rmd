@@ -4911,8 +4911,8 @@ auc_1_6 <- auc_1 %>% select(Pds,Clcreat,age,taille,SEX,SC_mosteller,greffe,amt,o
 set.seed(123)
 
 splits <- initial_split(auc_1_6, strata = auc)
-auc_train_2_6  <- training(splits)
-auc_test_2_6   <- testing(splits)
+auc_train_1_6  <- training(splits)
+auc_test_1_6   <- testing(splits)
 
 set.seed(234)
 auc_set_1_6  <- validation_split(auc_train_1_6, 
@@ -5044,10 +5044,32 @@ predict_xgb_1_6=predict(final_wf_xgb_1_6,auc_test_1_6)%>%
           bias_rel_square = bias_rel * bias_rel)
 
 
-erreur <- predict_xgb_1_6 %>% bind_cols(auc_test_1_6) %>% mutate(diff= auc...2-.pred)
+erreur <- predict_xgb_1_6 %>% bind_cols(auc_test_1_6) %>% mutate(diff= auc...2-.pred) %>% mutate(biais=(.pred-auc...2)/auc...2)
 summary(erreur)
 
-erreur %>% filter(diff>20)
+erreur %>% filter(diff>10)
+
+with(erreur, cor.test(age, diff, 
+                  alternative="two.sided", method="spearman"))
+
+pr= ggplot(erreur,aes(x=age,y=diff))
+pr=pr+geom_point()
+reg<-lm(age ~ diff, data = erreur)
+
+pr=pr+stat_smooth(method="lm", se=FALSE)
+pr=pr+theme_classic()
+pr
+
+with(erreur, cor.test(age, biais, 
+                  alternative="two.sided", method="spearman"))
+
+pr= ggplot(erreur,aes(x=age,y=biais))
+pr=pr+geom_point()
+reg<-lm(age ~ diff, data = erreur)
+
+pr=pr+stat_smooth(method="lm", se=FALSE)
+pr=pr+theme_classic()
+pr
 rmarkdown::paged_table(as.data.frame(predict_xgb_1_6 %>% summarise(biais_rel = mean(bias_rel), relative_rmse = sqrt(mean(bias_rel_square)),biais_out_20percent = mean(!between(bias_rel,-0.2, 0.2)), nb_out_20percent = sum(!between(bias_rel,-0.2, 0.2)),biais_out_10percent = mean(!between(bias_rel,-0.1, 0.1)), nb_out_10percent = sum(!between(bias_rel,-0.1, 0.1)), n= n())))
 
 predict_xgb_1_6 %>%
@@ -5118,9 +5140,9 @@ base_externe_finalIV2 <-base_externe_finalIV2 %>% left_join(dose)
 base_externe_finalIV3<-base_externe_finalIV2%>% mutate(auc_24=case_when(DI=="12" ~AUC*2,DI=="24" ~AUC,DI=="0" ~AUC))%>%  mutate(amt_24=case_when(DI=="12" ~amt*2,DI=="24" ~amt,DI=="0" ~amt))%>% select(-amt)%>% rename(amt=amt_24)
 summary(base_externe_finalIV3)
 
-base_externe_finalIV3bis <- base_externe_finalIV3 %>% mutate(auc_bis=case_when(auc_24<70~auc_24,auc_24>=70~ auc_24/2))
+
 summary(base_externe_finalIV3bis)
-base_externe_finalIV4<-base_externe_finalIV3bis%>% mutate(SEX1=case_when(SEX=="0"~"garcon",SEX=="1"~"fille"))%>% select(-SEX)%>% rename(SEX=SEX1) %>% rename(auc=auc_bis)
+base_externe_finalIV4<-base_externe_finalIV3%>% mutate(SEX1=case_when(SEX=="0"~"garcon",SEX=="1"~"fille"))%>% select(-SEX)%>% rename(SEX=SEX1)%>% rename(auc=auc_24)
 summary(base_externe_finalIV4)
 base_externe_finalIV4 <- base_externe_finalIV4 %>% 
   mutate(time_bin = factor(case_when(between(TIME ,0.9, 1.4) ~"out_1",
@@ -5179,6 +5201,47 @@ predict base ext
 
 ```{r}
 library(tidymodels)
+base_externe_finalIV_long_1_3 <- base_externe_finalIV4_bis_bis_long %>% filter(!is.na(out_1)) %>% filter(!is.na(out_3)) %>% mutate(greffe="solide")
+
+
+predict_baseextIV_1_3=predict(final_wf_xgb_1_3,base_externe_finalIV_long_1_3)%>%
+     bind_cols(auc=base_externe_finalIV_long_1_3$auc) %>%
+  mutate (bias_rel = (.pred - auc)/auc,
+          bias_rel_square = bias_rel * bias_rel)
+
+
+predict_baseextIV_1_3
+rmarkdown::paged_table(as.data.frame(predict_baseextIV_1_3 %>% summarise(biais_rel = mean(bias_rel), relative_rmse = sqrt(mean(bias_rel_square)),biais_out_20percent = mean(!between(bias_rel,-0.2, 0.2)), nb_out_20percent = sum(!between(bias_rel,-0.2, 0.2)),biais_out_10percent = mean(!between(bias_rel,-0.1, 0.1)), nb_out_10percent = sum(!between(bias_rel,-0.1, 0.1)), n= n())))
+
+predict_baseextIV_1_3 %>%
+  ggplot(mapping = aes(x = .pred, y = auc)) + 
+  geom_point() +
+  geom_smooth(method=lm) 
+
+predict_baseextIV_1_3 %>%
+  ggplot(mapping = aes(x = .pred, y = auc-.pred)) + 
+  geom_point() +
+  geom_smooth(method=lm)
+zm <-predict_baseextIV_1_3 %>%
+  ggplot(mapping = aes(x = .pred, y = auc)) + 
+  geom_point() +
+  geom_smooth(method=lm) +labs(
+    x = "Predicted AUC ",
+    y = "Reference AUC ")  +theme_bw() + scale_x_continuous(breaks=c(20,30,40,50,60,70))+ scale_y_continuous(breaks=c(20,30,40,50,60,70))
+Zm
+
+library(knitr)
+library(blandr)
+
+statistics.results1_3 <- blandr.statistics( predict_baseextIV_1_3$auc , predict_baseextIV_1_3$.pred )
+
+Ztg <-blandr.plot.ggplot( statistics.results1_3 , plotTitle = "" , ciDisplay = F, ciShading = FALSE)+theme_bw()
+
+library(gridExtra)
+
+grid.arrange(zm,Ztg,ncol=2, nrow=1)
+
+
 
 predict_baseextIV_1_6=predict(final_wf_xgb_1_6,base_externe_finalIV_long2)%>%
      bind_cols(auc=base_externe_finalIV_long2$auc) %>%
@@ -5198,6 +5261,8 @@ predict_baseextIV_1_6 %>%
   ggplot(mapping = aes(x = .pred, y = auc-.pred)) + 
   geom_point() +
   geom_smooth(method=lm)
+
+
 
 
 tm <-predict_baseextIV_1_6 %>%
@@ -5224,22 +5289,20 @@ grid.arrange(pm,bg,tm,btg ,ncol=2, nrow=2)
 total_graph_GCV <- plot_grid(pm,bg,tm,btg ,ncol=2, nrow=2, labels = "AUTO")
 total_graph_GCV
 
-ggsave("total_graph_GCV.tiff", units="in", width=10, height=10, dpi=300, compression = 'lzw')
-
-#### performance sans les ID 5a,36a,59, 52,60
-
-base_externe_finalIV_long2_filter <- base_externe_finalIV_long2  %>% filter(!ID=="5a") %>% filter(!ID=="36a") %>% filter(!ID=="59")  %>% filter(!ID=="52") %>% filter(!ID=="60")
+#ggsave("total_graph_GCV.tiff", units="in", width=10, height=10, dpi=300, compression = 'lzw')
 
 
-predict_baseextIV_1_6_filter=predict(final_wf_xgb_1_6,base_externe_finalIV_long2_filter)%>%
-     bind_cols(auc=base_externe_finalIV_long2_filter$auc) %>%
-  mutate (bias_rel = (.pred - auc)/auc,
-          bias_rel_square = bias_rel * bias_rel)
+erreur_baseext <- predict_baseextIV_1_6 %>% bind_cols(base_externe_finalIV_long2) %>% mutate(diff=auc...2-.pred)
+with(erreur_baseext, cor.test(age, diff, 
+                  alternative="two.sided", method="spearman"))
 
+pr= ggplot(erreur_baseext,aes(x=age,y=diff))
+pr=pr+geom_point()
+reg<-lm(age ~ diff, data = erreur)
 
-
-rmarkdown::paged_table(as.data.frame(predict_baseextIV_1_6_filter %>% summarise(biais_rel = mean(bias_rel), relative_rmse = sqrt(mean(bias_rel_square)),biais_out_20percent = mean(!between(bias_rel,-0.2, 0.2)), nb_out_20percent = sum(!between(bias_rel,-0.2, 0.2)),biais_out_10percent = mean(!between(bias_rel,-0.1, 0.1)), nb_out_10percent = sum(!between(bias_rel,-0.1, 0.1)), n= n())))
-
+pr=pr+stat_smooth(method="lm", se=FALSE)
+pr=pr+theme_classic()
+pr
 
 ```
 
