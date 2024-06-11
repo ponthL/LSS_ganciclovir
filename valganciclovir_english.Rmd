@@ -1,0 +1,6320 @@
+---
+title: "valganciclovir_LSS_mai24"
+output: html_document
+date: "2024-05-04"
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+
+library(tidyverse)
+library(truncnorm)
+library(mrgsolve)
+
+library(mrgsolve)
+library(mapbayr)
+
+library(dplyr)
+
+library(magrittr)
+library(ggplot2)
+library(PKNCA)
+library(ggplot2)
+library(ggcorrplot)
+```
+
+simulation dataset
+
+```{r}
+
+
+####for girls
+
+
+### weight 0/1 ans 
+set.seed(2345)
+gen_1 <-  function (x) {tibble(ID1 = x, Pds= rtruncnorm(300, a=8.3, b=13.3, mean = 10.93, sd = 3))}
+W_1 <- 1:1 %>% map_df(gen_1)%>% dplyr::mutate(age=1) 
+
+### height 0/1 ans  
+set.seed(2345)
+taille_1 <-  function (x) {tibble(ID1 = x, taille= rtruncnorm(300, a=68, b=95, mean = 83, sd = 3))}
+T_1 <- 1:1 %>% map_df(taille_1)
+
+W_1 <- W_1 %>% bind_cols(T_1) %>% select(Pds,taille,age)
+summary(W_1)
+
+### 2 years
+
+set.seed(2345)
+gen_2 <-  function (x) {tibble(ID1 = x, Pds= rtruncnorm(300, a=10, b=18, mean =13.3, sd = 3.5))}
+W_2 <- 1:1 %>% map_df(gen_2) %>% mutate(age=2)
+
+####  
+set.seed(2345)
+taille_2 <-  function (x) {tibble(ID1 = x, taille = rtruncnorm(300, a=82, b=100, mean = 90, sd = 3))}
+T_2 <- 1:1 %>% map_df(taille_2)
+
+W_2 <- W_2 %>% bind_cols(T_2) %>% select(Pds,taille,age)
+summary(W_2)
+
+
+### with 1 & 2 years old
+Simu_inf2 <- W_1 %>% bind_rows(W_2) 
+summary(Simu_inf2)
+
+### creatinine simulation
+
+set.seed(2345)
+gen_Clcreat <-  function (x) {tibble(ID1 = x, Clcreat= rtruncnorm(600, a=20, b=250, mean =35, sd = 35))}
+Clcreat<- 1:1 %>% map_df(gen_Clcreat)
+
+Simu_inf2 <- Simu_inf2 %>% bind_cols(Clcreat)
+Simu_inf2 <- as.tibble(Simu_inf2 )%>% select(Pds,Clcreat,age,taille)%>% mutate(ID = 1:600)
+
+### 3, 4, 5 years old 
+
+set.seed(2345)
+gen_3 <-  function (x) {tibble(ID1 = x, Pds= rtruncnorm(300, a=12, b=20, mean =14.3, sd = 3.5))}
+W_3 <- 1:1 %>% map_df(gen_3) %>% mutate(age=3)
+
+ 
+set.seed(2345)
+taille_3 <-  function (x) {tibble(ID1 = x, taille = rtruncnorm(300, a=88, b=110, mean = 98, sd = 3))}
+T_3 <- 1:1 %>% map_df(taille_3)
+
+W_3 <- W_3 %>% bind_cols(T_3) %>% select(Pds,taille,age)
+
+
+set.seed(2345)
+gen_4 <-  function (x) {tibble(ID1 = x, Pds= rtruncnorm(300, a=12.4, b=23.3, mean =15.3, sd = 3.5))}
+W_4<- 1:1 %>% map_df(gen_4) %>% mutate(age=4)
+
+### 4 years
+set.seed(2345)
+taille_4 <-  function (x) {tibble(ID1 = x, taille = rtruncnorm(300, a=93, b=120, mean = 118, sd = 3.5))}
+T_4 <- 1:1 %>% map_df(taille_4)
+
+W_4 <- W_4 %>% bind_cols(T_4)%>% select(Pds,taille,age)
+
+
+set.seed(2345)
+gen_5 <-  function (x) {tibble(ID1 = x, Pds= rtruncnorm(300, a=14.2, b=29.7, mean =19.5, sd = 3.5))}
+W_5<- 1:1 %>% map_df(gen_5) %>% mutate(age=5)
+
+set.seed(2345)
+taille_5 <-  function (x) {tibble(ID1 = x, taille = rtruncnorm(300, a=100, b=129, mean = 112, sd = 3.5))}
+T_5 <- 1:1 %>% map_df(taille_5)
+
+W_5 <- W_5 %>% bind_cols(T_5)%>% select(Pds,taille,age)
+
+
+Simu3_5 <- W_3 %>% bind_rows( W_4) %>% bind_rows( W_5)
+set.seed(2345)
+gen_Clcreat3_5 <-  function (x) {tibble(ID1 = x, Clcreat= rtruncnorm(900, a=20, b=250, mean =35, sd = 35))}
+Clcreat3_5<- 1:1 %>% map_df(gen_Clcreat3_5)
+
+
+Simu3_5 <- Simu3_5 %>% bind_cols(Clcreat3_5)
+Simu3_5 <- as.tibble(Simu3_5) %>% select(Pds,Clcreat,age,taille)%>% mutate (ID=601:1500)
+
+###  6/7/8/9/10/11 years old
+
+
+set.seed(2345)
+gen_6 <-  function (x) {tibble(ID1 = x, Pds= rtruncnorm(300, a=16, b=32, mean =22, sd = 3.5))}
+W_6<- 1:1 %>% map_df(gen_6) %>% mutate(age=6)
+
+set.seed(2345)
+taille_6 <-  function (x) {tibble(ID1 = x, taille = rtruncnorm(300, a=104, b=134, mean = 124, sd = 3.5))}
+T_6 <- 1:1 %>% map_df(taille_6)
+
+W_6 <- W_6 %>% bind_cols(T_6)%>% select(Pds,taille,age)
+
+
+
+set.seed(2345)
+gen_7 <-  function (x) {tibble(ID1 = x, Pds= rtruncnorm(300, a=18, b=38.3, mean =24, sd = 5.5))}
+W_7<- 1:1 %>% map_df(gen_7) %>% mutate(age=7)
+set.seed(2345)
+taille_7 <-  function (x) {tibble(ID1 = x, taille = rtruncnorm(300, a=108, b=143, mean = 124, sd = 5.5))}
+T_7 <- 1:1 %>% map_df(taille_7)
+
+W_7 <- W_7 %>% bind_cols(T_7)%>% select(Pds,taille,age)
+
+
+set.seed(2345)
+gen_8 <-  function (x) {tibble(ID1 = x, Pds= rtruncnorm(300, a=19, b=44, mean =28.2, sd = 6.5))}
+W_8<- 1:1 %>% map_df(gen_8) %>% mutate(age=8)
+set.seed(2345)
+taille_8 <-  function (x) {tibble(ID1 = x, taille = rtruncnorm(300, a=108, b=152, mean = 137.7, sd = 6.5))}
+T_8 <- 1:1 %>% map_df(taille_8)
+
+W_8 <- W_8 %>% bind_cols(T_8)%>% select(Pds,taille,age)
+
+
+set.seed(2345)
+gen_9 <-  function (x) {tibble(ID1 = x, Pds= rtruncnorm(300, a=21, b=49.5, mean =29.5, sd = 7.5))}
+W_9<- 1:1 %>% map_df(gen_9) %>% mutate(age=9)
+set.seed(2345)
+taille_9 <-  function (x) {tibble(ID1 = x, taille = rtruncnorm(300, a=118, b=154, mean = 135, sd = 7.5))}
+T_9 <- 1:1 %>% map_df(taille_9)
+
+W_9 <- W_9 %>% bind_cols(T_9)%>% select(Pds,taille,age)
+
+
+set.seed(2345)
+gen_10 <-  function (x) {tibble(ID1 = x, Pds= rtruncnorm(300, a=22, b=52, mean =323.5, sd = 7.5))}
+W_10<- 1:1 %>% map_df(gen_10)  %>% mutate(age=10)
+set.seed(2345)
+taille_10 <-  function (x) {tibble(ID1 = x, taille = rtruncnorm(300, a=122, b=165, mean = 141, sd = 7.5))}
+T_10 <- 1:1 %>% map_df(taille_10)
+
+W_10 <- W_10 %>% bind_cols(T_10)%>% select(Pds,taille,age)
+
+
+
+set.seed(2345)
+gen_11 <-  function (x) {tibble(ID1 = x, Pds= rtruncnorm(300, a=24.5, b=64.5, mean =40, sd = 7.5))}
+W_11<- 1:1 %>% map_df(gen_11)  %>% mutate(age=11)
+
+set.seed(2345)
+taille_11 <-  function (x) {tibble(ID1 = x, taille = rtruncnorm(300, a=124, b=175, mean = 148, sd = 7.5))}
+T_11 <- 1:1 %>% map_df(taille_11)
+
+W_11 <- W_11 %>% bind_cols(T_11)%>% select(Pds,taille,age)
+
+
+Simu6_11 <- W_6 %>% bind_rows(W_7)%>% bind_rows(W_8)%>% bind_rows(W_9)%>% bind_rows(W_10)%>% bind_rows(W_11)
+set.seed(2345)
+gen_Clcreat6_11 <-  function (x) {tibble(ID1 = x, Clcreat= rtruncnorm(1800, a=20, b=250, mean =35, sd = 35))}
+Clcreat6_11<- 1:1 %>% map_df(gen_Clcreat6_11)
+
+
+Simu6_11 <- Simu6_11 %>% bind_cols(Clcreat6_11)
+Simu6_11 <- as.tibble(Simu6_11) %>% select(Pds,Clcreat,age,taille)%>% mutate (ID=1501:3300)
+summary(Simu6_11)
+
+### >=12 years old 
+
+set.seed(2345)
+gen_12 <-  function (x) {tibble(ID1 = x, Pds= rtruncnorm(300, a=28, b=75, mean =46.5, sd = 8.5))}
+W_12<- 1:1 %>% map_df(gen_12) %>% mutate(age=12)
+set.seed(2345)
+taille_12 <-  function (x) {tibble(ID1 = x, taille = rtruncnorm(300, a=125, b=182, mean = 155, sd = 8.5))}
+T_12 <- 1:1 %>% map_df(taille_12)
+
+W_12 <- W_12 %>% bind_cols(T_12)%>% select(Pds,taille,age)
+
+
+
+set.seed(2345)
+gen_13 <-  function (x) {tibble(ID1 = x, Pds= rtruncnorm(300, a=28, b=80, mean =48, sd = 9.5))}
+W_13<- 1:1 %>% map_df(gen_13) %>% mutate(age=13)
+set.seed(2345)
+taille_13 <-  function (x) {tibble(ID1 = x, taille = rtruncnorm(300, a=132, b=180, mean = 152, sd = 9.5))}
+T_13 <- 1:1 %>% map_df(taille_13)
+
+W_13 <- W_13 %>% bind_cols(T_13)%>% select(Pds,taille,age)
+
+
+set.seed(2345)
+gen_14 <-  function (x) {tibble(ID1 = x, Pds= rtruncnorm(300, a=33, b=86, mean =50, sd = 10.5))}
+W_14<- 1:1 %>% map_df(gen_14) %>% mutate(age=14)
+set.seed(2345)
+taille_14 <-  function (x) {tibble(ID1 = x, taille = rtruncnorm(300, a=140, b=190, mean = 165, sd = 10.5))}
+T_14 <- 1:1 %>% map_df(taille_14)
+
+W_14 <- W_14 %>% bind_cols(T_14)%>% select(Pds,taille,age)
+
+
+set.seed(2345)
+gen_15 <-  function (x) {tibble(ID1 = x, Pds= rtruncnorm(300, a=36, b=92, mean =55, sd = 10.5))}
+W_15<- 1:1 %>% map_df(gen_15) %>% mutate(age=15)
+set.seed(2345)
+taille_15 <-  function (x) {tibble(ID1 = x, taille = rtruncnorm(300, a=144, b=195, mean = 165, sd = 10.5))}
+T_15 <- 1:1 %>% map_df(taille_15)
+
+W_15 <- W_15 %>% bind_cols(T_15)%>% select(Pds,taille,age)
+
+
+set.seed(2345)
+gen_16 <-  function (x) {tibble(ID1 = x, Pds= rtruncnorm(300, a=40, b=95, mean =57, sd = 10.5))}
+W_16<- 1:1 %>% map_df(gen_16) %>% mutate(age=16)
+set.seed(2345)
+taille_16 <-  function (x) {tibble(ID1 = x, taille = rtruncnorm(300, a=144, b=195, mean = 165, sd = 10.5))}
+T_16 <- 1:1 %>% map_df(taille_16)
+
+W_16 <- W_16 %>% bind_cols(T_16)%>% select(Pds,taille,age)
+
+
+
+set.seed(2345)
+gen_17 <-  function (x) {tibble(ID1 = x, Pds= rtruncnorm(300, a=43, b=99, mean =59, sd = 10.5))}
+W_17<- 1:1 %>% map_df(gen_17) %>% mutate(age=17)
+set.seed(2345)
+taille_17 <-  function (x) {tibble(ID1 = x, taille = rtruncnorm(300, a=144, b=195, mean = 165, sd = 10.5))}
+T_17 <- 1:1 %>% map_df(taille_17)
+
+W_17 <- W_17 %>% bind_cols(T_17)%>% select(Pds,taille,age)
+
+
+
+set.seed(2345)
+gen_18 <-  function (x) {tibble(ID1 = x, Pds= rtruncnorm(300, a=43, b=99, mean =59, sd = 10.5))}
+W_18<- 1:1 %>% map_df(gen_18) %>% mutate(age=18)
+set.seed(2345)
+taille_18 <-  function (x) {tibble(ID1 = x, taille = rtruncnorm(300, a=144, b=195, mean = 165, sd = 10.5))}
+T_18 <- 1:1 %>% map_df(taille_18)
+
+W_18 <- W_18 %>% bind_cols(T_18)%>% select(Pds,taille,age)
+
+
+
+
+simu12_18 <- W_12 %>% bind_rows(W_13) %>% bind_rows(W_14) %>% bind_rows(W_15) %>% bind_rows(W_16) %>% bind_rows(W_17) %>% bind_rows(W_18)
+set.seed(2345)
+gen_Clcreat12_18 <-  function (x) {tibble(ID1 = x, Clcreat= rtruncnorm(2100,a=20, b=250, mean =35, sd = 35))}
+Clcreat12_18<- 1:1 %>% map_df(gen_Clcreat12_18)
+
+
+simu12_18 <- simu12_18 %>% bind_cols(Clcreat12_18)
+Simu12_18 <- as.tibble(simu12_18) %>% select(Pds,Clcreat,age,taille)%>% mutate (ID=3301:5400)
+
+summary(Simu12_18)
+
+
+Simu_totale_fille <- Simu_inf2 %>% bind_rows(Simu3_5)%>% bind_rows(Simu6_11)%>% bind_rows(simu12_18) %>% select(Pds,Clcreat,age,taille)%>% mutate(ID=c(1:5400))%>% mutate(SEX="fille")
+
+### we calculate the creatine clairance for girls
+Simu_totale_fille <- Simu_totale_fille %>% mutate(Clcreat2=case_when(age<=1~(40*taille/Clcreat),age>1 & age<=12~(49*taille/Clcreat),age>12~(53*taille/Clcreat) ))
+Simu_totale_fille <- Simu_totale_fille %>%select(-Clcreat) %>%rename (Clcreat=Clcreat2)
+
+summary(Simu_totale_fille)
+
+
+### for  boys 
+
+
+### weight 0/1 ans 
+set.seed(2345)
+gen_1 <-  function (x) {tibble(ID1 = x, Pds= rtruncnorm(300, a=7.3, b=16.3, mean = 11.93, sd = 3))}
+W_1 <- 1:1 %>% map_df(gen_1)%>% dplyr::mutate(age=1) 
+
+  
+set.seed(2345)
+taille_1 <-  function (x) {tibble(ID1 = x, taille= rtruncnorm(300, a=72, b=95, mean = 83, sd = 3))}
+T_1 <- 1:1 %>% map_df(taille_1)
+
+W_1 <- W_1 %>% bind_cols(T_1) %>% select(Pds,taille,age)
+summary(W_1)
+
+
+set.seed(2345)
+gen_2 <-  function (x) {tibble(ID1 = x, Pds= rtruncnorm(300, a=9.5, b=20, mean =13.8, sd = 3.5))}
+W_2 <- 1:1 %>% map_df(gen_2) %>% mutate(age=2)
+
+
+set.seed(2345)
+taille_2 <-  function (x) {tibble(ID1 = x, taille = rtruncnorm(300, a=79, b=108, mean = 92, sd = 3))}
+T_2 <- 1:1 %>% map_df(taille_2)
+
+W_2 <- W_2 %>% bind_cols(T_2) %>% select(Pds,taille,age)
+summary(W_2)
+
+
+
+Simu_inf2 <- W_1 %>% bind_rows(W_2) 
+summary(Simu_inf2)
+
+### simulation creatinine
+
+set.seed(2345)
+gen_Clcreat <-  function (x) {tibble(ID1 = x, Clcreat= rtruncnorm(600,a=20, b=250, mean =35, sd = 35))}
+Clcreat<- 1:1 %>% map_df(gen_Clcreat)
+
+Simu_inf2 <- Simu_inf2 %>% bind_cols(Clcreat)
+Simu_inf2 <- as.tibble(Simu_inf2 )%>% select(Pds,Clcreat,age,taille)%>% mutate(ID = 1:600)
+
+### 3, 4, 5 
+
+set.seed(2345)
+gen_3 <-  function (x) {tibble(ID1 = x, Pds= rtruncnorm(300, a=11, b=22, mean =15.3, sd = 3.5))}
+W_3 <- 1:1 %>% map_df(gen_3) %>% mutate(age=3)
+
+
+set.seed(2345)
+taille_3 <-  function (x) {tibble(ID1 = x, taille = rtruncnorm(300, a=86, b=118, mean = 100, sd = 3))}
+T_3 <- 1:1 %>% map_df(taille_3)
+
+W_3 <- W_3 %>% bind_cols(T_3) %>% select(Pds,taille,age)
+
+
+set.seed(2345)
+gen_4 <-  function (x) {tibble(ID1 = x, Pds= rtruncnorm(300, a=12.4, b=25.3, mean =17.3, sd = 3.5))}
+W_4<- 1:1 %>% map_df(gen_4) %>% mutate(age=4)
+
+ 
+set.seed(2345)
+taille_4 <-  function (x) {tibble(ID1 = x, taille = rtruncnorm(300, a=92, b=124, mean = 108, sd = 3.5))}
+T_4 <- 1:1 %>% map_df(taille_4)
+
+W_4 <- W_4 %>% bind_cols(T_4)%>% select(Pds,taille,age)
+
+
+set.seed(2345)
+gen_5 <-  function (x) {tibble(ID1 = x, Pds= rtruncnorm(300, a=15, b=30, mean =19.8, sd = 3.5))}
+W_5<- 1:1 %>% map_df(gen_5) %>% mutate(age=5)
+
+set.seed(2345)
+taille_5 <-  function (x) {tibble(ID1 = x, taille = rtruncnorm(300, a=98, b=137, mean = 115, sd = 3.5))}
+T_5 <- 1:1 %>% map_df(taille_5)
+
+W_5 <- W_5 %>% bind_cols(T_5)%>% select(Pds,taille,age)
+
+
+Simu3_5 <- W_3 %>% bind_rows( W_4) %>% bind_rows( W_5)
+set.seed(2345)
+gen_Clcreat3_5 <-  function (x) {tibble(ID1 = x, Clcreat= rtruncnorm(900, a=20, b=250, mean =35, sd = 35))}
+Clcreat3_5<- 1:1 %>% map_df(gen_Clcreat3_5)
+
+
+Simu3_5 <- Simu3_5 %>% bind_cols(Clcreat3_5)
+Simu3_5 <- as.tibble(Simu3_5) %>% select(Pds,Clcreat,age,taille)%>% mutate (ID=601:1500)
+
+###  6/7/8/9/10/11
+
+
+set.seed(2345)
+gen_6 <-  function (x) {tibble(ID1 = x, Pds= rtruncnorm(300, a=15, b=30, mean =22, sd = 3.5))}
+W_6<- 1:1 %>% map_df(gen_6) %>% mutate(age=6)
+
+set.seed(2345)
+taille_6 <-  function (x) {tibble(ID1 = x, taille = rtruncnorm(300, a=102, b=140, mean = 122, sd = 3.5))}
+T_6 <- 1:1 %>% map_df(taille_6)
+
+W_6 <- W_6 %>% bind_cols(T_6)%>% select(Pds,taille,age)
+
+
+
+set.seed(2345)
+gen_7 <-  function (x) {tibble(ID1 = x, Pds= rtruncnorm(300, a=17, b=35.3, mean =25, sd = 5.5))}
+W_7<- 1:1 %>% map_df(gen_7) %>% mutate(age=7)
+set.seed(2345)
+taille_7 <-  function (x) {tibble(ID1 = x, taille = rtruncnorm(300, a=108, b=145, mean = 125, sd = 5.5))}
+T_7 <- 1:1 %>% map_df(taille_7)
+
+W_7 <- W_7 %>% bind_cols(T_7)%>% select(Pds,taille,age)
+
+
+set.seed(2345)
+gen_8 <-  function (x) {tibble(ID1 = x, Pds= rtruncnorm(300, a=19, b=48, mean =28, sd = 6.5))}
+W_8<- 1:1 %>% map_df(gen_8) %>% mutate(age=8)
+set.seed(2345)
+taille_8 <-  function (x) {tibble(ID1 = x, taille = rtruncnorm(300, a=112, b=152, mean = 132, sd = 6.5))}
+T_8 <- 1:1 %>% map_df(taille_8)
+
+W_8 <- W_8 %>% bind_cols(T_8)%>% select(Pds,taille,age)
+
+
+
+set.seed(2345)
+gen_9 <-  function (x) {tibble(ID1 = x, Pds= rtruncnorm(300, a=21, b=49.5, mean =29.5, sd = 7.5))}
+W_9<- 1:1 %>% map_df(gen_9) %>% mutate(age=9)
+set.seed(2345)
+taille_9 <-  function (x) {tibble(ID1 = x, taille = rtruncnorm(300, a=116, b=160, mean = 138, sd = 7.5))}
+T_9 <- 1:1 %>% map_df(taille_9)
+
+W_9 <- W_9 %>% bind_cols(T_9)%>% select(Pds,taille,age)
+
+
+set.seed(2345)
+gen_10 <-  function (x) {tibble(ID1 = x, Pds= rtruncnorm(300, a=23, b=62, mean =33.5, sd = 7.5))}
+W_10<- 1:1 %>% map_df(gen_10)  %>% mutate(age=10)
+set.seed(2345)
+taille_10 <-  function (x) {tibble(ID1 = x, taille = rtruncnorm(300, a=120, b=165, mean = 142, sd = 7.5))}
+T_10 <- 1:1 %>% map_df(taille_10)
+
+W_10 <- W_10 %>% bind_cols(T_10)%>% select(Pds,taille,age)
+
+
+
+set.seed(2345)
+gen_11 <-  function (x) {tibble(ID1 = x, Pds= rtruncnorm(300, a=24.5, b=69.5, mean =38, sd = 7.5))}
+W_11<- 1:1 %>% map_df(gen_11)  %>% mutate(age=11)
+
+set.seed(2345)
+taille_11 <-  function (x) {tibble(ID1 = x, taille = rtruncnorm(300, a=125, b=173, mean = 148, sd = 7.5))}
+T_11 <- 1:1 %>% map_df(taille_11)
+
+W_11 <- W_11 %>% bind_cols(T_11)%>% select(Pds,taille,age)
+
+
+Simu6_11 <- W_6 %>% bind_rows(W_7)%>% bind_rows(W_8)%>% bind_rows(W_9)%>% bind_rows(W_10)%>% bind_rows(W_11)
+set.seed(2345)
+gen_Clcreat6_11 <-  function (x) {tibble(ID1 = x, Clcreat= rtruncnorm(1800, a=20, b=250, mean =35, sd = 35))}
+Clcreat6_11<- 1:1 %>% map_df(gen_Clcreat6_11)
+
+
+Simu6_11 <- Simu6_11 %>% bind_cols(Clcreat6_11)
+Simu6_11 <- as.tibble(Simu6_11) %>% select(Pds,Clcreat,age,taille)%>% mutate (ID=1501:3300)
+summary(Simu6_11)
+
+### others >=12 years old
+
+set.seed(2345)
+gen_12 <-  function (x) {tibble(ID1 = x, Pds= rtruncnorm(300, a=26, b=80, mean =42, sd = 8.5))}
+W_12<- 1:1 %>% map_df(gen_12) %>% mutate(age=12)
+set.seed(2345)
+taille_12 <-  function (x) {tibble(ID1 = x, taille = rtruncnorm(300, a=128, b=182, mean = 155, sd = 8.5))}
+T_12 <- 1:1 %>% map_df(taille_12)
+
+W_12 <- W_12 %>% bind_cols(T_12)%>% select(Pds,taille,age)
+
+
+
+set.seed(2345)
+gen_13 <-  function (x) {tibble(ID1 = x, Pds= rtruncnorm(300, a=28, b=80, mean =48, sd = 9.5))}
+W_13<- 1:1 %>% map_df(gen_13) %>% mutate(age=13)
+set.seed(2345)
+taille_13 <-  function (x) {tibble(ID1 = x, taille = rtruncnorm(300, a=132, b=190, mean = 161, sd = 9.5))}
+T_13 <- 1:1 %>% map_df(taille_13)
+
+W_13 <- W_13 %>% bind_cols(T_13)%>% select(Pds,taille,age)
+
+
+set.seed(2345)
+gen_14 <-  function (x) {tibble(ID1 = x, Pds= rtruncnorm(300, a=33, b=92, mean =55, sd = 10.5))}
+W_14<- 1:1 %>% map_df(gen_14) %>% mutate(age=14)
+set.seed(2345)
+taille_14 <-  function (x) {tibble(ID1 = x, taille = rtruncnorm(300, a=136, b=195, mean = 177, sd = 10.5))}
+T_14 <- 1:1 %>% map_df(taille_14)
+
+W_14 <- W_14 %>% bind_cols(T_14)%>% select(Pds,taille,age)
+
+
+set.seed(2345)
+gen_15 <-  function (x) {tibble(ID1 = x, Pds= rtruncnorm(300, a=36, b=92, mean =60, sd = 10.5))}
+W_15<- 1:1 %>% map_df(gen_15) %>% mutate(age=15)
+set.seed(2345)
+taille_15 <-  function (x) {tibble(ID1 = x, taille = rtruncnorm(300, a=144, b=195, mean = 172, sd = 10.5))}
+T_15 <- 1:1 %>% map_df(taille_15)
+
+W_15 <- W_15 %>% bind_cols(T_15)%>% select(Pds,taille,age)
+
+
+set.seed(2345)
+gen_16 <-  function (x) {tibble(ID1 = x, Pds= rtruncnorm(300, a=40, b=95, mean =62, sd = 10.5))}
+W_16<- 1:1 %>% map_df(gen_16) %>% mutate(age=16)
+set.seed(2345)
+taille_16 <-  function (x) {tibble(ID1 = x, taille = rtruncnorm(300, a=144, b=195, mean = 175, sd = 10.5))}
+T_16 <- 1:1 %>% map_df(taille_16)
+
+W_16 <- W_16 %>% bind_cols(T_16)%>% select(Pds,taille,age)
+
+
+
+set.seed(2345)
+gen_17 <-  function (x) {tibble(ID1 = x, Pds= rtruncnorm(300, a=43, b=110, mean =65, sd = 10.5))}
+W_17<- 1:1 %>% map_df(gen_17) %>% mutate(age=17)
+set.seed(2345)
+taille_17 <-  function (x) {tibble(ID1 = x, taille = rtruncnorm(300, a=154, b=195, mean = 175, sd = 10.5))}
+T_17 <- 1:1 %>% map_df(taille_17)
+
+W_17 <- W_17 %>% bind_cols(T_17)%>% select(Pds,taille,age)
+
+
+
+set.seed(2345)
+gen_18 <-  function (x) {tibble(ID1 = x, Pds= rtruncnorm(300, a=43, b=99, mean =65, sd = 10.5))}
+W_18<- 1:1 %>% map_df(gen_18) %>% mutate(age=18)
+set.seed(2345)
+taille_18 <-  function (x) {tibble(ID1 = x, taille = rtruncnorm(300, a=144, b=195, mean = 175, sd = 10.5))}
+T_18 <- 1:1 %>% map_df(taille_18)
+
+W_18 <- W_18 %>% bind_cols(T_18)%>% select(Pds,taille,age)
+
+
+
+
+simu12_18 <- W_12 %>% bind_rows(W_13) %>% bind_rows(W_14) %>% bind_rows(W_15) %>% bind_rows(W_16) %>% bind_rows(W_17) %>% bind_rows(W_18)
+
+gen_Clcreat12_18 <-  function (x) {tibble(ID1 = x, Clcreat= rtruncnorm(2100,a=20, b=250, mean =35, sd = 35))}
+Clcreat12_18<- 1:1 %>% map_df(gen_Clcreat12_18)
+
+
+simu12_18 <- simu12_18 %>% bind_cols(Clcreat12_18)
+Simu12_18 <- as.tibble(simu12_18) %>% select(Pds,Clcreat,age,taille)%>% mutate (ID=3301:5400)
+
+summary(Simu12_18)
+
+
+
+
+
+
+Simu_totale_boy<- Simu_inf2 %>% bind_rows(Simu3_5)%>% bind_rows(Simu6_11)%>% bind_rows(simu12_18) %>% select(Pds,Clcreat,age,taille)%>% mutate(ID=c(1:5400))%>% mutate(SEX="garcon")
+
+### we calculate the creatine clairance for boys 
+
+Simu_totale_boy <- Simu_totale_boy %>% mutate(Clcreat2=case_when(age<=1~(40*taille/Clcreat),age>1 & age<=12~(49*taille/Clcreat),age>12~(62*taille/Clcreat) ))%>%select(-Clcreat) %>%rename (Clcreat=Clcreat2)
+summary(Simu_totale_boy)
+
+
+
+#boys+girls
+
+Simu_totale <- Simu_totale_boy %>% bind_rows(Simu_totale_fille) %>% select(-ID)%>% mutate(ID=c(1:10800))
+### SC Mosteller 
+
+Simu_totale <- Simu_totale %>% mutate(SC_mosteller= sqrt((taille*Pds)/3600)) 
+summary(Simu_totale)
+
+
+
+Simu_totale<- Simu_totale %>% mutate(type_greffe= sample(1:2,10800,replace=T))
+Simu_totale$type_greffe=as.factor(Simu_totale$type_greffe)
+
+
+Simu_totale<- Simu_totale %>% mutate(greffe= case_when(type_greffe=="1"~"solide",type_greffe=="2"~"moelle" ))%>% select(-type_greffe)
+#
+                                      
+
+
+
+
+
+### posology PO ganciclovir
+
+Simu_totale_avec_dose2 <- Simu_totale %>%mutate (Clcreat2 = case_when(Clcreat<150 ~ Clcreat, Clcreat>=150 ~ 150))%>%mutate(amt= 7*SC_mosteller*Clcreat2)%>% mutate(amt2 = case_when(amt<900 ~ amt, amt>=900 ~ 900))
+                                                             
+summary(Simu_totale_avec_dose2)
+
+
+
+#### we separated into 3 datasets  for simulations with Franck, Facchin and nguyen models
+
+set.seed(123)  
+sample <- sample.int(n = nrow(Simu_totale_avec_dose2), size = floor(.333*nrow(Simu_totale_avec_dose2)), replace = F)
+
+data_bene <- Simu_totale_avec_dose2[sample, ]
+Simu_totale_avec_dose2_2  <- Simu_totale_avec_dose2[-sample, ]
+
+
+set.seed(123)  
+sample2 <- sample.int(n = nrow(Simu_totale_avec_dose2_2), size = floor(.5*nrow(Simu_totale_avec_dose2_2)), replace = F)
+
+data_nguyen <- Simu_totale_avec_dose2_2[sample2, ]
+Simu_totale_avec_dose2_3  <- Simu_totale_avec_dose2_2[-sample2, ]
+
+
+
+
+data_facchin <- Simu_totale_avec_dose2_3
+
+data_bene2 <- data_bene %>% mutate(methode="bene")
+data_nguyen2 <- data_nguyen %>% mutate(methode="nguyen")
+data_facchin2 <- data_facchin %>% mutate(methode="facchin")
+
+data_globale <-data_bene2 %>% bind_rows(data_nguyen2) %>% bind_rows(data_facchin2) %>% select(-amt)%>% rename(amt=amt2)
+summary(data_globale)
+library(compareGroups)
+
+table1 <- compareGroups(methode ~ Pds+Clcreat+age+taille+amt+SEX+greffe,data = data_globale)
+                       
+restable1 <- createTable(table1, show.all = T)
+
+restable1
+
+
+
+
+
+
+```
+Franck's model simulation
+
+```{r}
+code_bene <- "
+
+[PROB] #modèle Ganciclovir bjcp Franck et al 2020
+
+[SET] end=100, delta=0.1
+
+[PARAM] @annotated
+
+
+TVKa: 0.73 : typical Ka (/h)
+TVF:  0.43: Typical bioavailability (%)
+TV1: 9.7 :  typical V1
+TV2: 7.6:  typical  V2
+TVQ : 10.9 : typical intercompartmental clearance
+TVCL : 6.9 : typical CL 
+WT :26.7 : median current weight 
+CLCREA :148.8: median Cl creat 
+CrCL: 0.88 : effet of CrCL on CL
+
+
+[CMT] @annotated
+DEPOT  : Dosing compartment (mg)
+CENT : Central compartment
+PERI : First peripheral compartment 
+ 
+
+ [OMEGA] @annotated
+ETACL : 0.19 : ETA on clearance
+ETAV1 : 0.348 : ETA on V1
+ETAKa : 0.49 : ETA on Ka
+ETAF : 0.096 : ETA on F 
+
+[MAIN]
+
+double Ka = TVKa*exp(ETAKa);
+double CL = TVCL*pow(WT/26.7,0.75)*pow(CLCREA/148.8,CrCL)*exp(ETACL);
+double Q = TVQ ;
+double V1 = (TV1*WT/26.5)*exp(ETAV1) ;
+double V2 = TV2*WT/26.5 ;
+F_DEPOT= TVF*exp(ETAF);
+ALAG_DEPOT = 0.33;
+
+
+
+[SIGMA] @annotated
+ADD : 0.0001 : additive Residual unexplained variability 0.98
+
+
+[ODE]
+dxdt_DEPOT = -Ka*DEPOT;
+dxdt_CENT = Ka*DEPOT -(CL+Q)*CENT/V1 + Q*PERI/V2 ;
+dxdt_PERI = Q*CENT/V1 - Q*PERI/V2 ;
+
+[TABLE] 
+capture CP = (CENT/V1)+ADD;
+int i = 0;
+while(CP<0 && i <100) {
+simeps(1);
+CP = (CENT/V1) + EPS(1);
+++i;
+}
+
+"
+
+
+my_model_bene <- mcode("ganciclovir_model", code_bene)
+
+
+my_model_bene %>% 
+  ev(am = 520 ,ss=1, ii=12) %>%
+  Req(CP) %>%
+  mrgsim(delta = 0.1, end = 24) %>% 
+  plot()
+
+my_model_bene %>% 
+  ev(am = 520 ,ss=1, ii=12) %>%
+  Req(CP) %>%
+  mrgsim(delta = 0.1, end = 24) %>% 
+  plot()
+
+
+data <- expand.ev(ID = 1:10, amt = 520,ii=24, ss=1)#) #2,2.5,3, 3.5, 4
+set.seed(2345)
+sim_bene <- my_model_bene %>% 
+  data_set(data) %>%
+  Req(CP) %>%
+ mrgsim(delta = 1, end = 24)#%>% 
+  #f#ilter(time==24)
+  #plot()
+  #filter(time==23.9)
+
+
+
+
+```
+
+NGuyen's model simulation
+
+```{r}
+code_nguyen <- "
+
+[PROB] #modèle Ganciclovir  Nguyen et al 2021
+
+[SET] end=100, delta=0.1
+
+[PARAM] @annotated
+
+
+TVKa: 0.506 : typical Ka (/h)
+TVF:  0.438: Typical bioavailability (%)
+TV1: 5.96 :  typical V1
+TV2: 1.29:  typical  V2
+TVQ : 0.222 : typical intercompartmental clearance
+TVCL : 2.55 : etypical CL 
+CRCL : 0.763 : effect ClCr deviation on CL 
+WT :26.7 : median current weight 
+CLCREA :148.8: median Cl creat 
+
+
+[CMT] @annotated
+DEPOT  : Dosing compartment (mg)
+CENT : Central compartment
+PERI : First peripheral compartment 
+ 
+
+[OMEGA] @annotated
+ETACL : 0.0556 : ETA on clearance
+ETAV1 : 0.0484 : ETA on V1
+
+
+
+[MAIN]
+ 
+
+double Ka = TVKa;
+double CL = TVCL*pow(WT/11.7,0.75)*pow(CLCREA/167,CRCL)*exp(ETACL);
+double Q = TVQ*pow(WT/11.7,0.75) ;
+double V1 = TV1*pow(WT/11.7,1)*exp(ETAV1);
+double V2 = TV2*pow(WT/11.7,1) ;
+F_DEPOT= TVF;
+
+
+
+
+[SIGMA] @annotated
+PROP: 0.0001: proportionnel error 0.477
+
+[ODE]
+dxdt_DEPOT = -Ka*DEPOT;
+dxdt_CENT = Ka*DEPOT -(CL+Q)*CENT/V1 + Q*PERI/V2 ;
+dxdt_PERI = Q*CENT/V1 - Q*PERI/V2 ;
+
+[TABLE] 
+capture CP = (CENT/V1)* (1+ EPS(1));
+int i = 0;
+while(CP<0 && i <100) {
+simeps();
+CP = (CENT/V1)* (1+ EPS(1)) ;
+++i;
+}
+
+"
+
+
+my_model_nguyen <- mcode("ganciclovir_model_nguyen", code_nguyen)
+
+
+my_model_nguyen %>% 
+  ev(am = 520 ,ss=1, ii=24) %>%
+  Req(CP) %>%
+  mrgsim(delta = 0.1, end = 24) %>% 
+  plot()
+
+my_model_nguyen %>% 
+  ev(am = 520 ,ss=1, ii=24) %>%
+  Req(CP) %>%
+  mrgsim(delta = 0.1, end = 24) %>% 
+  plot()
+
+
+data <- expand.ev(ID = 1:10, amt = 520,ii=12, ss=1)#) #2,2.5,3, 3.5, 4
+set.seed(2345)
+sim_nguyen <- my_model_nguyen %>% 
+  data_set(data) %>%
+  Req(CP) %>%
+ mrgsim(delta = 1, end = 24)#%>% 
+  #filter(time==12)
+  #plot()
+  #filter(time==23.9)
+
+
+
+
+```
+
+
+
+Facchin's model simulation
+
+```{r}
+code_Facchin <- "
+
+[PROB] #modèle Facchin et al 2009 
+
+[SET] end=100, delta=0.1
+
+[PARAM] @annotated
+
+
+TVKa: 6.96 : typical Ka (/h)
+TVALAG:0.86: typical lag time
+TV1: 45 :  typical V1
+TV2: 18.5:  typical  V2
+TVQ : 1.46 : typical intercompartmental clearance
+TVCL:9.07 : clearance typique 
+CRCL : -0.768 : effect Creat deviation on CL 
+CRBSA: 1.31: effet BSA on cl
+VBSA: 1.28: effet BSA on V 
+CRSEX:1.15 : effet sexe on cl 
+VSEX: 1.14: effet SEX on V 
+BSA :1.08  : median BSA
+CREA :72.5: median creat 
+SEX : 1 : 1 si garçon 0 si fille 
+
+
+[CMT] @annotated
+DEPOT  : Dosing compartment (mg)
+CENT : Central compartment
+PERI : First peripheral compartment 
+ 
+
+ [OMEGA] @annotated
+ETACL :0.0256 : ETA on clearance
+ETAV1 : 0.0086 : ETA on V1
+ETAV2 : 0.298 : ETA on V2
+ETAKa : 0.350 : ETA on Ka
+
+
+
+[MAIN]
+ 
+
+double Ka = TVKa*exp(ETAKa);
+double CL = TVCL*pow(BSA,CRBSA)*pow(CREA/72.5,CRCL)*pow(CRSEX,SEX)*exp(ETACL);
+double Q = TVQ ;
+double V1 = TV1*pow(BSA,VBSA)*pow(VSEX,SEX)*exp(ETAV1);
+double V2 = TV2*exp(ETAV2) ;
+ALAG_DEPOT= TVALAG;
+
+
+
+[SIGMA] @annotated
+ADD: 0.0001: additive error log(0.23)
+
+[ODE]
+dxdt_DEPOT = -Ka*DEPOT;
+dxdt_CENT = Ka*DEPOT -(CL+Q)*CENT/V1 + Q*PERI/V2 ;
+dxdt_PERI = Q*CENT/V1 - Q*PERI/V2 ;
+
+[TABLE] 
+capture CP = (CENT/V1)+ EPS(1);
+int i = 0;
+while(CP<0 && i <100) {
+simeps();
+CP = (CENT/V1)+ EPS(1);
+++i;
+}
+
+"
+
+
+my_model_Facchin <- mcode("ganciclovir_model_Facchin", code_Facchin)
+
+
+my_model_Facchin %>% 
+  ev(am = 400 ,ss=1, ii=24) %>%
+  Req(CP) %>%
+  mrgsim(delta = 0.1, end = 24) %>% 
+  plot()
+
+my_model_Facchin %>% 
+  ev(am = 600 ,ss=1, ii=24) %>%
+  Req(CP) %>%
+  mrgsim(delta = 0.1, end = 24) %>% 
+  plot()
+
+
+data <- expand.ev(ID = 1:10, amt = 520,ii=24, ss=1)#) #2,2.5,3, 3.5, 4
+set.seed(2345)
+sim_Facchin <- my_model_Facchin %>% 
+  data_set(data) %>%
+  Req(CP) %>%
+ mrgsim(delta = 1, end = 24)#%>% 
+  #filter(time==12)
+  #plot()
+  #filter(time==23.9)
+
+
+
+
+```
+
+```{r}
+
+### Franck model  
+
+e_bene <- expand.ev( ii = 24, ID=1:3596,addl = 5,ss=1) %>%  select(-amt) %>% bind_cols(data_bene)%>% mutate(ID=1:3596)%>%  select(-ID...1,-amt)%>% rename(amt=amt2)
+
+
+summary(e_bene)
+
+out <- my_model_bene %>% 
+  data_set(e_bene) %>%
+  Req(CP) %>%
+  mrgsim(end = 120, delta = 0.5)
+
+out_bene <- as_tibble(out) %>% left_join(e_bene, by = "ID") %>% filter(CP>0)  
+
+summary(out_bene)
+
+library(PKNCA)
+
+
+#AUC calculation
+auc_trap_bene <- out_bene %>% select(time.x,CP,ii,addl,evid,cmt,amt,ID)%>% rename(dose =amt,OUT=CP,TIME=time.x) %>%
+filter(between(TIME,24,48))
+
+
+data.conc <-PKNCAconc(auc_trap_bene,OUT~TIME|ID)
+
+
+data_obj <- PKNCAdata(data.conc=data.conc,
+                      intervals=data.frame(start=24,
+                                           end=48,
+                                           aucall=F,
+                                           auclast=TRUE,
+                                           aucinf.pred=F,
+                                           aucinf.obs=F))
+results_obj <- pk.nca(data_obj)$result
+
+
+trap1 <- results_obj %>% dplyr::select(ID, trap =PPORRES) %>% mutate(auc = round(trap,5))%>% dplyr::select(-trap)
+
+
+simu_auc_bene <-left_join(out_bene,trap1) %>% mutate(methode="bene")
+summary(simu_auc_bene)
+
+
+
+
+
+#### Facchin
+
+e_Facchin <- expand.ev( ii = 24, ID=1:3602,addl = 5,ss=1) %>%  select(-amt) %>% bind_cols(data_facchin)%>% mutate(ID=1:3602)%>%  select(-ID...1,-amt)%>% rename(amt=amt2) %>% mutate(SEX2 = case_when(SEX== "fille"~ "0",SEX== "garcon"~ "1" ))%>% select(-SEX) %>% rename (SEX=SEX2) %>% mutate(BSA=SC_mosteller) %>% mutate (CRE= case_when(age<12~49*taille/Clcreat, age>=12 & SEX <1 ~ 53*taille/Clcreat,age>=12 & SEX>=1 ~ 62*taille/Clcreat ))%>% mutate (CREA = case_when(CRE<350 ~ CRE, CRE>=350 ~ 350))
+
+e_Facchin$SEX=as.numeric(e_Facchin$SEX)
+summary(e_Facchin)
+
+out_Facchin <- my_model_Facchin %>% 
+  data_set(e_Facchin) %>%
+  Req(CP) %>%
+  mrgsim(end = 120, delta = 0.5)
+
+out_Facchin <- as_tibble(out_Facchin) %>% left_join(e_Facchin, by = "ID") %>% filter(CP>0)  
+
+summary(out_Facchin)
+
+library(PKNCA)
+
+
+#AUC calculation
+auc_trap_Facchin <- out_Facchin  %>% select(time.x,CP,ii,addl,evid,cmt,amt,ID)%>% rename(dose =amt,OUT=CP,TIME=time.x) %>%
+filter(between(TIME,24,48))
+
+
+data.conc <-PKNCAconc(auc_trap_Facchin,OUT~TIME|ID)
+
+
+data_obj <- PKNCAdata(data.conc=data.conc,
+                      intervals=data.frame(start=24,
+                                           end=48,
+                                           aucall=F,
+                                           auclast=TRUE,
+                                           aucinf.pred=F,
+                                           aucinf.obs=F))
+results_obj <- pk.nca(data_obj)$result
+
+
+trap1 <- results_obj %>% dplyr::select(ID, trap =PPORRES) %>% mutate(auc = round(trap,5))%>% dplyr::select(-trap)
+
+
+simu_auc_Facchin<-left_join(out_Facchin ,trap1)%>% mutate(methode="Facchin")
+summary(simu_auc_Facchin)
+
+####  Nguyen simulation 
+
+e_nguyen <- expand.ev( ii = 24, ID=1:3602,addl = 5,ss=1) %>%  select(-amt) %>% bind_cols(data_nguyen)%>% mutate(ID=1:3602)%>%  select(-ID...1,-amt)%>% rename(amt=amt2) 
+
+
+summary(e_nguyen)
+
+out_nguyen <- my_model_nguyen %>% 
+  data_set(e_nguyen) %>%
+  Req(CP) %>%
+  mrgsim(end = 120, delta = 0.5)
+
+out_nguyen <- as_tibble(out_nguyen) %>% left_join(e_nguyen, by = "ID") %>% filter(CP>0)  
+
+summary(out_nguyen)
+
+library(PKNCA)
+
+
+#AUC calculation 
+auc_trap_nguyen<- out_nguyen  %>% select(time.x,CP,ii,addl,evid,cmt,amt,ID)%>% rename(dose =amt,OUT=CP,TIME=time.x) %>%
+filter(between(TIME,24,48))
+
+
+data.conc <-PKNCAconc(auc_trap_nguyen,OUT~TIME|ID)
+
+
+data_obj <- PKNCAdata(data.conc=data.conc,
+                      intervals=data.frame(start=24,
+                                           end=48,
+                                           aucall=F,
+                                           auclast=TRUE,
+                                           aucinf.pred=F,
+                                           aucinf.obs=F))
+results_obj <- pk.nca(data_obj)$result
+
+
+trap1 <- results_obj %>% dplyr::select(ID, trap =PPORRES) %>% mutate(auc = round(trap,5))%>% dplyr::select(-trap)
+
+
+simu_auc_nguyen<-left_join(out_nguyen ,trap1)%>% mutate(methode="nguyen")
+summary(simu_auc_nguyen)
+
+
+
+
+simu_auc_Facchin$SEX=as.factor(simu_auc_Facchin$SEX)
+
+simu_auc_Facchin<- simu_auc_Facchin%>% mutate(SEX2 = case_when(SEX== "0"~ "fille",SEX== "1"~ "garcon" ))%>% select(-SEX)%>% rename (SEX=SEX2)
+
+
+simu_auc <- bind_rows(simu_auc_Facchin)%>% bind_rows(simu_auc_nguyen)%>% bind_rows(simu_auc_bene) %>% rename(ID=ID...1)
+summary(simu_auc)
+
+
+simu_auc <- simu_auc %>% 
+  mutate(time_bin = factor(case_when(time.x  < 0.1 ~ "out_0.3",
+         between(time.x ,24.1,24.6)~"out_0.5",
+         between(time.x ,24.7, 25.1) ~"out_1",
+         between(time.x ,25.2, 25.7) ~"out_1.5",
+         between(time.x ,25.8, 26.3) ~"out_2",
+         between(time.x ,26.3, 26.7) ~"out_2.5",
+         between(time.x ,26.8, 27.3) ~"out_3",
+         between(time.x ,27.4, 27.7) ~"out_3.5",
+         between(time.x ,27.8, 28.4) ~"out_4",
+         between(time.x ,28.9, 29.4) ~"out_5",
+         between(time.x ,29.9, 30.4) ~"out_6",
+         between(time.x ,30.9, 31.4) ~"out_7",
+         between(time.x ,31.9, 32.4) ~"out_8",
+         between(time.x ,32.9, 33.4) ~"out_9",
+         between(time.x ,33.9, 34.4) ~"out_10",
+         between(time.x ,34.9, 36.4) ~"out_12", 
+         between(time.x ,37.9, 38.4) ~"out_14", 
+         between(time.x ,39.9, 40.4) ~"out_16", 
+         between(time.x ,41.9, 42.4) ~"out_18",
+         between(time.x ,43.5, 44.4) ~"out_20",
+         between(time.x ,23.5, 23.9) ~"out_0")))
+
+auc <- simu_auc %>% ungroup %>% pivot_wider(id_cols=c(ID,Pds,Clcreat,age,taille,SEX,SC_mosteller,greffe,amt,auc),names_from =  time_bin ,values_from = CP,values_fn=mean,names_repair="minimal")
+ 
+summary(auc)
+
+quantile(auc$auc,c(0.01, 0.5, 0.99))
+
+
+auc <- auc %>%  filter(auc <= 120 & auc>=6 )
+
+ 
+#saveRDS(auc, "auc_PO_mai24.rds")
+
+
+```
+
+```{r}
+library(tidymodels)
+
+set.seed(1234)
+
+summary(auc)
+auc_1<- auc %>% dplyr::select( -ID)
+summary(auc_1)
+
+
+set.seed(123)
+
+splits <- initial_split(auc_1, strata = auc)
+auc_train <- training(splits)
+auc_test  <- testing(splits)
+
+set.seed(234)
+auc_set <- validation_split(auc_train, 
+                            strata = auc, 
+                            prop = 0.80)
+
+auc_train_train <- analysis(auc_set$splits[[1]])
+auc_train_test <-assessment(auc_set$splits[[1]])
+
+summary(auc_train)
+
+auc_train2 <- auc_train %>% mutate(group="train")
+auc_test2 <- auc_test %>% mutate(group="test")
+table1article <- auc_train2 %>% bind_rows(auc_test2)
+
+table1 <- compareGroups(group ~Pds+Clcreat+age+taille+SEX+greffe+amt+auc+out_0+out_0.5+out_1+out_2+out_3+out_4+out_5+out_6+out_8+out_10+out_12+out_14+out_16+out_20, data=table1article,method = 2)
+                       
+restable1 <- createTable(table1, show.all = T)
+
+restable1
+
+#saveRDS(auc_test, "auc_test_mai24.rds")
+
+#auc_test <-readRDS("auc_test_mai24.rds")
+
+
+```
+
+
+```{r}
+
+
+auc_0_2 <- auc_1 %>% select(Pds,Clcreat,age,taille,SEX,SC_mosteller,greffe,amt,out_0,out_2,auc)
+
+
+set.seed(123)
+
+splits <- initial_split(auc_0_2, strata = auc)
+auc_train_0_2  <- training(splits)
+auc_test_0_2   <- testing(splits)
+
+set.seed(234)
+auc_set_0_2  <- validation_split(auc_train_0_2, 
+                            strata = auc, 
+                            prop = 0.80)
+
+auc_train_train_0_2<- analysis(auc_set_0_2$splits[[1]])
+auc_train_test_0_2<-assessment(auc_set_0_2$splits[[1]])
+
+auc_rec_0_2 <- recipe(auc ~ ., data = auc_train_train_0_2) %>%
+  step_normalize(all_numeric(), -all_outcomes()) %>%
+  step_dummy(greffe,SEX,one_hot=T) 
+
+auc_prep_recipe_0_2 <-  prep(auc_rec_0_2)
+auc_train_recipe_0_2 <-juice(auc_prep_recipe_0_2)
+summary(auc_train_recipe_0_2)
+
+
+### glmnet
+glmnet_spec <- linear_reg(penalty=tune(),mixture = 1) %>%
+  set_engine("glmnet") %>%
+  set_mode("regression")
+
+#workflow model+recipe
+glmnet_wf_0_2 <- workflow() %>%
+  add_recipe(auc_rec_0_2) %>%
+  add_model(glmnet_spec)
+
+
+##hyperparameters
+set.seed(2345)
+auc_folds_0_2 <- vfold_cv(auc_train_train_0_2, v=10)#par défaut 10 fois
+
+#tuning
+set.seed(345)
+tune_glmnet_0_2 <- tune_grid(
+  glmnet_wf_0_2,
+  resamples = auc_folds_0_2,
+  grid = 30)
+
+
+tune_glmnet_0_2%>% collect_metrics()
+
+best_rmse_glmnet_0_2 <- select_best(tune_glmnet_0_2)
+final_glmnet_0_2 <- finalize_model(
+  glmnet_spec,
+  best_rmse_glmnet_0_2
+)
+
+final_glmnet_0_2
+
+
+library(vip)
+
+#finalize workflow
+final_wf_glmnet_0_2 <- workflow() %>%
+  add_recipe(auc_rec_0_2) %>%
+  add_model(final_glmnet_0_2)
+
+###resample#####
+set.seed(456)
+folds_0_2 <- vfold_cv(auc_train_train_0_2)#par défaut 10 fois
+set.seed(123)
+glmnet_rs_0_2 <- fit_resamples(object = final_wf_glmnet_0_2, resamples = folds_0_2, control = control_resamples(verbose=T, save_pred = T))
+
+##perf resample
+glmnet_rs_0_2 %>% collect_metrics()
+
+pred_obs_glmnet_0_2 <- glmnet_rs_0_2 %>% collect_predictions() %>%
+   mutate (bias_rel = (.pred - auc)/auc,
+          bias_rel_square = bias_rel * bias_rel)
+
+
+#perfs
+mean(pred_obs_glmnet_0_2$bias_rel)
+sqrt(mean(pred_obs_glmnet_0_2$bias_rel_square))
+
+glmnet_rs_0_2 %>%
+  collect_predictions() %>%
+  ggplot(mapping = aes(x = .pred, y = auc)) + 
+  geom_point() +
+  geom_smooth(method=lm) 
+
+rmarkdown::paged_table(as.data.frame(pred_obs_glmnet_0_2 %>% summarise(biais_rel = mean(bias_rel), relative_rmse = sqrt(mean(bias_rel_square)),biais_out_20percent = mean(!between(bias_rel,-0.2, 0.2)), nb_out_20percent = sum(!between(bias_rel,-0.2, 0.2)),biais_out_10percent = mean(!between(bias_rel,-0.1, 0.1)), nb_out_10percent = sum(!between(bias_rel,-0.1, 0.1)), n= n())))
+
+final_wf_glmnet_0_2 <- workflow() %>%
+  add_recipe(auc_rec_0_2) %>%
+  add_model(final_glmnet_0_2) %>% 
+  fit(auc_train_test_0_2)
+
+predict_0_2=predict(final_wf_glmnet_0_2,auc_train_test_0_2)%>%
+     bind_cols(auc=auc_train_test_0_2$auc) %>%
+  mutate (bias_rel = (.pred - auc)/auc,
+          bias_rel_square = bias_rel * bias_rel)
+
+rmarkdown::paged_table(as.data.frame(predict_0_2 %>% summarise(biais_rel = mean(bias_rel), relative_rmse = sqrt(mean(bias_rel_square)),biais_out_20percent = mean(!between(bias_rel,-0.2, 0.2)), nb_out_20percent = sum(!between(bias_rel,-0.2, 0.2)),biais_out_10percent = mean(!between(bias_rel,-0.1, 0.1)), nb_out_10percent = sum(!between(bias_rel,-0.1, 0.1)), n= n())))
+
+# xgboost
+
+ #model
+xgb_spec <- boost_tree(mode = "regression",
+                        mtry = tune(),
+                        trees = 1000,
+                        min_n = tune(),
+                        tree_depth = tune(),
+                        sample_size=tune(),
+                        learn_rate = tune()) %>% set_engine("xgboost")
+
+#workflow model+recipe
+xgb_wf_0_2 <- workflow() %>%
+  add_recipe(auc_rec_0_2) %>%
+  add_model(xgb_spec)
+#
+##hyperparameters
+set.seed(2345)
+auc_folds_0_2 <- vfold_cv(auc_train_train_0_2)#par défaut 10 fois
+
+library(xgboost)
+#tuning
+set.seed(345)
+tune_xgb <- tune_grid(
+  xgb_wf_0_2,
+  resamples = auc_folds_0_2,
+  grid = 30)
+
+
+#visualisatin resultats
+tune_xgb %>%
+  collect_metrics() %>%
+  filter(.metric == "rmse") %>%
+  dplyr::select(mean, min_n, mtry, learn_rate, tree_depth,sample_size) %>%
+  pivot_longer(min_n:tree_depth,
+               values_to = "value",
+               names_to = "parameter"
+  ) %>%
+  ggplot(aes(value, mean, color = parameter)) +
+  geom_point(show.legend = FALSE) +
+  facet_wrap(~parameter, scales = "free_x") +
+  labs(x = NULL, y = "RMSE")
+
+#choix du best model
+best_rmse_xgb_0_2 <- select_best(tune_xgb)
+
+final_xgb_0_2<- finalize_model(
+  xgb_spec,
+  best_rmse_xgb_0_2
+)
+
+final_xgb_0_2
+
+final_xgb_0_2 %>%
+  set_engine("xgboost", importance = "permutation") %>%
+  fit(auc ~ .,
+      data = juice(auc_prep_recipe_0_2)
+  ) %>%
+  vip::vip(geom = "col")
+
+#finalize workflow
+final_wf_xgb_0_2 <- workflow() %>%
+  add_recipe(auc_rec_0_2) %>%
+  add_model(final_xgb_0_2)%>%
+  fit(auc_train_train_0_2)
+
+###resample#####
+set.seed(456)
+folds_0_2 <- vfold_cv(auc_train_train_0_2)#par défaut 10 fois
+set.seed(123)
+xgb_rs_0_2 <- fit_resamples(object = final_wf_xgb_0_2, resamples = folds_0_2, control = control_resamples(verbose=T, save_pred = T))
+
+##perf resample
+xgb_rs_0_2 %>% collect_metrics()
+
+pred_obs_xgb_0_2 <- xgb_rs_0_2 %>% collect_predictions() %>%
+   mutate (bias_rel = (.pred - auc)/auc,
+          bias_rel_square = bias_rel * bias_rel)
+
+
+#perfs
+mean(pred_obs_xgb_0_2$bias_rel)
+
+sqrt(mean(pred_obs_xgb_0_2$bias_rel_square))
+
+xgb_rs_0_2 %>%
+  collect_predictions() %>%
+  ggplot(mapping = aes(x = .pred, y = auc)) + 
+  geom_point() +
+  geom_smooth(method=lm) 
+
+rmarkdown::paged_table(as.data.frame(pred_obs_xgb_0_2 %>% summarise(biais_rel = mean(bias_rel), relative_rmse = sqrt(mean(bias_rel_square)),biais_out_20percent = mean(!between(bias_rel,-0.2, 0.2)), nb_out_20percent = sum(!between(bias_rel,-0.2, 0.2)),biais_out_10percent = mean(!between(bias_rel,-0.1, 0.1)), nb_out_10percent = sum(!between(bias_rel,-0.1, 0.1)), n= n())))
+
+
+final_wf_xgb_0_2 <- workflow() %>%
+  add_recipe(auc_rec_0_2) %>%
+  add_model(final_xgb_0_2) %>% 
+  fit(auc_train_test_0_2)
+
+predict_0_6=predict(final_wf_xgb_0_2,auc_train_test_0_2)%>%
+     bind_cols(auc=auc_train_test_0_2$auc) %>%
+  mutate (bias_rel = (.pred - auc)/auc,
+          bias_rel_square = bias_rel * bias_rel)
+
+rmarkdown::paged_table(as.data.frame(predict_0_2 %>% summarise(biais_rel = mean(bias_rel), relative_rmse = sqrt(mean(bias_rel_square)),biais_out_20percent = mean(!between(bias_rel,-0.2, 0.2)), nb_out_20percent = sum(!between(bias_rel,-0.2, 0.2)),biais_out_10percent = mean(!between(bias_rel,-0.1, 0.1)), nb_out_10percent = sum(!between(bias_rel,-0.1, 0.1)), n= n())))
+
+
+#### mars
+
+# workflow mars
+
+mars_spec <- mars(num_terms = tune(), prod_degree = tune()) %>%
+  set_engine("earth") %>%
+  set_mode("regression")
+
+#workflow model+recipe
+mars_wf_0_2 <- workflow() %>%
+  add_recipe(auc_rec_0_2) %>%
+  add_model(mars_spec)
+
+set.seed(345)
+#on reaffine grid
+mars_grid <- grid_regular(
+  num_terms(range = c(1L, 36L)),
+  prod_degree(range = c(1L, 2L)),
+  levels = 20
+)
+
+mars_grid
+
+
+
+##hyperparameters
+set.seed(2345)
+env_folds_0_2 <- vfold_cv(auc_train_train_0_2)#par défaut 10 fois
+
+
+#retune
+set.seed(456)
+library(earth)
+regular_res_0_2 <- tune_grid(
+ mars_wf_0_2,
+ resamples = env_folds_0_2,
+ grid = mars_grid)
+
+
+#regular_res
+
+#visualisation
+regular_res_0_2 %>%
+  collect_metrics() %>%
+  filter(.metric == "rmse") %>%
+  mutate(prod_degree = factor(prod_degree)) %>%
+  ggplot(aes(num_terms, mean, color = prod_degree)) +
+  geom_line(alpha = 0.5, size = 1.5) +
+  geom_point() +
+  labs(y = "RMSE")
+
+#visualisation des résultats
+library(vip)
+#choix du best model
+best_rmse_mars_0_2 <- select_best(regular_res_0_2)
+
+final_mars_0_2 <- finalize_model(
+  mars_spec,
+  best_rmse_mars_0_2
+)
+
+final_mars_0_2
+
+final_mars_0_2 %>%
+  set_engine("earth") %>%
+  fit(auc ~ .,
+      data = juice(auc_prep_recipe_0_2)
+  ) %>%
+  vip(geom = "col")
+
+
+#finalize workflow
+final_wf_mars_0_2 <- workflow() %>%
+  add_recipe(auc_rec_0_2) %>%
+  add_model(final_mars_0_2)
+
+###resample#####
+set.seed(456)
+folds_0_2 <- vfold_cv(auc_train_train_0_2)#par défaut 10 fois
+set.seed(123)
+mars_rs_0_2 <- fit_resamples(object = final_wf_mars_0_2, resamples = folds_0_2, control = control_resamples(verbose=T, save_pred = T))
+
+##perf resample
+mars_rs_0_2 %>% collect_metrics()
+
+#perfs
+pred_obs_mars_0_2 <- mars_rs_0_2 %>% collect_predictions() %>%
+   mutate (bias_rel = (.pred - auc)/auc,
+          bias_rel_square = bias_rel * bias_rel)
+
+mean(pred_obs_mars_0_2$bias_rel)
+
+sqrt(mean(pred_obs_mars_0_2$bias_rel_square))
+
+mars_rs_0_2 %>%
+  collect_predictions() %>%
+  ggplot(mapping = aes(x = .pred, y = auc)) + 
+  geom_point() +
+  geom_smooth(method=lm) 
+
+
+rmarkdown::paged_table(as.data.frame(pred_obs_mars_0_2 %>% summarise(biais_rel = mean(bias_rel), relative_rmse = sqrt(mean(bias_rel_square)),biais_out_20percent = mean(!between(bias_rel,-0.2, 0.2)), nb_out_20percent = sum(!between(bias_rel,-0.2, 0.2)),biais_out_10percent = mean(!between(bias_rel,-0.1, 0.1)), nb_out_10percent = sum(!between(bias_rel,-0.1, 0.1)), n= n())))
+
+final_wf_mars_0_2 <- workflow() %>%
+  add_recipe(auc_rec_0_2) %>%
+  add_model(final_mars_0_2) %>% 
+  fit(auc_train_test_0_2)
+
+predict_0_2=predict(final_wf_mars_0_2,auc_train_test_0_2)%>%
+     bind_cols(auc=auc_train_test_0_2$auc) %>%
+  mutate (bias_rel = (.pred - auc)/auc,
+          bias_rel_square = bias_rel * bias_rel)
+
+rmarkdown::paged_table(as.data.frame(predict_0_2 %>% summarise(biais_rel = mean(bias_rel), relative_rmse = sqrt(mean(bias_rel_square)),biais_out_20percent = mean(!between(bias_rel,-0.2, 0.2)), nb_out_20percent = sum(!between(bias_rel,-0.2, 0.2)),biais_out_10percent = mean(!between(bias_rel,-0.1, 0.1)), nb_out_10percent = sum(!between(bias_rel,-0.1, 0.1)), n= n())))
+
+#### random forrest
+
+# #model
+
+
+rf_spec <- rand_forest(mode = "regression",
+                        mtry = tune(),
+                        trees = 1000,
+                        min_n = tune()
+                       ) %>% set_engine("ranger", importance = "permutation")
+
+
+
+#workflow model+recipe
+rf_wf <- workflow() %>%
+  add_recipe(auc_rec_0_2) %>%
+  add_model(rf_spec)
+#
+##hyperparameters
+set.seed(2345)
+folds_0_2 <- vfold_cv(auc_train_train_0_2)#par défaut 10 fois
+
+#tuning
+library(ranger)
+set.seed(345)
+tune_rf <- tune_grid(
+  rf_wf,
+  resamples = folds_0_2,
+  grid = 30
+)
+
+#visualisatin resultats
+
+autoplot(tune_rf) + 
+  ggtitle("tuning hyperparameter")
+
+#choix du best model
+best_rf_0_2 <- select_best(tune_rf)
+
+final_rf_0_2 <- finalize_model(
+  rf_spec,
+  best_rf_0_2
+)
+
+final_rf_0_2
+
+#finalize workflow
+final_wf_rf_0_2 <- workflow() %>%
+  add_recipe(auc_rec_0_2) %>%
+  add_model(final_rf_0_2)
+
+###resample#####
+set.seed(456)
+folds_cv <- vfold_cv(auc_train_train_0_2)#par défaut 10 fois
+
+## 10 fold CV
+rf_rs_0_2<- fit_resamples(object = final_wf_rf_0_2, resamples = folds_cv, control = control_resamples(verbose=T, save_pred = T))
+
+##perf resample
+rf_rs_0_2 %>% collect_metrics()
+
+
+#perfs
+pred_obs_rf_0_2 <- rf_rs_0_2 %>% collect_predictions() %>%
+   mutate (bias_rel = (.pred - auc)/auc,
+          bias_rel_square = bias_rel * bias_rel)
+
+
+
+
+rmarkdown::paged_table(as.data.frame(pred_obs_rf_0_2 %>% summarise(biais_rel = mean(bias_rel), relative_rmse = sqrt(mean(bias_rel_square)),biais_out_20percent = mean(!between(bias_rel,-0.2, 0.2)), nb_out_20percent = sum(!between(bias_rel,-0.2, 0.2)),biais_out_10percent = mean(!between(bias_rel,-0.1, 0.1)), nb_out_10percent = sum(!between(bias_rel,-0.1, 0.1)), n= n())))
+
+final_wf_rf_0_2 <- workflow() %>%
+  add_recipe(auc_rec_0_2) %>%
+  add_model(final_rf_0_2) %>% 
+  fit(auc_train_train_0_2)
+
+predict_0_2_rf=predict(final_wf_rf_0_2,auc_train_test_0_2)%>%
+     bind_cols(auc=auc_train_test_0_2$auc) %>%
+  mutate (bias_rel = (.pred - auc)/auc,
+          bias_rel_square = bias_rel * bias_rel)
+
+rmarkdown::paged_table(as.data.frame(predict_0_2_rf %>% summarise(biais_rel = mean(bias_rel), relative_rmse = sqrt(mean(bias_rel_square)),biais_out_20percent = mean(!between(bias_rel,-0.2, 0.2)), nb_out_20percent = sum(!between(bias_rel,-0.2, 0.2)),biais_out_10percent = mean(!between(bias_rel,-0.1, 0.1)), nb_out_10percent = sum(!between(bias_rel,-0.1, 0.1)), n= n())))
+
+
+#### SVM model
+
+svm_spec <- svm_linear() %>%
+  set_mode("regression") %>%
+  set_engine("LiblineaR")
+
+svm_wf <- workflow() %>%
+  add_recipe(auc_rec_0_2)
+
+library(LiblineaR)
+
+svm_fit <- svm_wf %>%
+  add_model(svm_spec) %>%
+  fit(data = auc_train_train_0_2)
+
+set.seed(123)
+
+svm_folds_0_2 <- vfold_cv(auc_train_train_0_2)
+
+svm_folds_0_2
+
+set.seed(123)
+
+svm_rs_0_2 <- fit_resamples(
+  svm_wf %>% add_model(svm_spec),
+  svm_folds_0_2,
+  control = control_resamples(save_pred = TRUE)
+)
+
+collect_metrics(svm_rs_0_2)
+
+
+#perfs
+pred_obs_SVM_0_2 <- svm_rs_0_2 %>% collect_predictions() %>%
+   mutate (bias_rel = (.pred - auc)/auc,
+          bias_rel_square = bias_rel * bias_rel)
+
+
+
+
+rmarkdown::paged_table(as.data.frame(pred_obs_SVM_0_2 %>% summarise(biais_rel = mean(bias_rel), relative_rmse = sqrt(mean(bias_rel_square)),biais_out_20percent = mean(!between(bias_rel,-0.2, 0.2)), nb_out_20percent = sum(!between(bias_rel,-0.2, 0.2)),biais_out_10percent = mean(!between(bias_rel,-0.1, 0.1)), nb_out_10percent = sum(!between(bias_rel,-0.1, 0.1)), n= n())))
+
+pred_obs_SVM_0_2 <- workflow() %>%
+  add_recipe(auc_rec_0_2) %>%
+  add_model(svm_spec) %>% 
+  fit(auc_train_train_0_2)
+
+predict_0_2_svm=predict(pred_obs_SVM_0_2,auc_train_test_0_2)%>%
+     bind_cols(auc=auc_train_test_0_2$auc) %>%
+  mutate (bias_rel = (.pred - auc)/auc,
+          bias_rel_square = bias_rel * bias_rel)
+
+rmarkdown::paged_table(as.data.frame(predict_0_2_svm %>% summarise(biais_rel = mean(bias_rel), relative_rmse = sqrt(mean(bias_rel_square)),biais_out_20percent = mean(!between(bias_rel,-0.2, 0.2)), nb_out_20percent = sum(!between(bias_rel,-0.2, 0.2)),biais_out_10percent = mean(!between(bias_rel,-0.1, 0.1)), nb_out_10percent = sum(!between(bias_rel,-0.1, 0.1)), n= n())))
+
+
+
+```
+
+times 0/3
+
+```{r}
+auc_0_3 <- auc_1 %>% select(Pds,Clcreat,age,taille,SEX,SC_mosteller,greffe,amt,out_0,out_3,auc)
+
+
+set.seed(123)
+
+splits <- initial_split(auc_0_3, strata = auc)
+auc_train_0_3  <- training(splits)
+auc_test_0_3   <- testing(splits)
+
+set.seed(234)
+auc_set_0_3  <- validation_split(auc_train_0_3, 
+                            strata = auc, 
+                            prop = 0.80)
+
+auc_train_train_0_3<- analysis(auc_set_0_3$splits[[1]])
+auc_train_test_0_3<-assessment(auc_set_0_3$splits[[1]])
+
+auc_rec_0_3 <- recipe(auc ~ ., data = auc_train_train_0_3) %>%
+  step_normalize(all_numeric(), -all_outcomes()) %>%
+  step_dummy(greffe,SEX,one_hot=T) 
+
+auc_prep_recipe_0_3 <-  prep(auc_rec_0_3)
+auc_train_recipe_0_3 <-juice(auc_prep_recipe_0_3)
+summary(auc_train_recipe_0_3)
+
+
+### glmnet
+glmnet_spec <- linear_reg(penalty=tune(),mixture = 1) %>%
+  set_engine("glmnet") %>%
+  set_mode("regression")
+
+#workflow model+recipe
+glmnet_wf_0_3 <- workflow() %>%
+  add_recipe(auc_rec_0_3) %>%
+  add_model(glmnet_spec)
+
+
+##hyperparameters
+set.seed(2345)
+auc_folds_0_3 <- vfold_cv(auc_train_train_0_3, v=10)#par défaut 10 fois
+
+#tuning
+set.seed(345)
+tune_glmnet_0_3 <- tune_grid(
+  glmnet_wf_0_3,
+  resamples = auc_folds_0_3,
+  grid = 30)
+
+
+tune_glmnet_0_3%>% collect_metrics()
+
+best_rmse_glmnet_0_3 <- select_best(tune_glmnet_0_3)
+final_glmnet_0_3<- finalize_model(
+  glmnet_spec,
+  best_rmse_glmnet_0_3
+)
+
+final_glmnet_0_3
+
+
+library(vip)
+
+#finalize workflow
+final_wf_glmnet_0_3 <- workflow() %>%
+  add_recipe(auc_rec_0_3) %>%
+  add_model(final_glmnet_0_3)
+
+###resample#####
+set.seed(456)
+folds_0_3 <- vfold_cv(auc_train_train_0_3)#par défaut 10 fois
+set.seed(123)
+glmnet_rs_0_3 <- fit_resamples(object = final_wf_glmnet_0_3, resamples = folds_0_3, control = control_resamples(verbose=T, save_pred = T))
+
+##perf resample
+glmnet_rs_0_3 %>% collect_metrics()
+
+pred_obs_glmnet_0_3 <- glmnet_rs_0_3 %>% collect_predictions() %>%
+   mutate (bias_rel = (.pred - auc)/auc,
+          bias_rel_square = bias_rel * bias_rel)
+
+
+#perfs
+mean(pred_obs_glmnet_0_3$bias_rel)
+sqrt(mean(pred_obs_glmnet_0_3$bias_rel_square))
+
+glmnet_rs_0_3 %>%
+  collect_predictions() %>%
+  ggplot(mapping = aes(x = .pred, y = auc)) + 
+  geom_point() +
+  geom_smooth(method=lm) 
+
+rmarkdown::paged_table(as.data.frame(pred_obs_glmnet_0_3 %>% summarise(biais_rel = mean(bias_rel), relative_rmse = sqrt(mean(bias_rel_square)),biais_out_20percent = mean(!between(bias_rel,-0.2, 0.2)), nb_out_20percent = sum(!between(bias_rel,-0.2, 0.2)),biais_out_10percent = mean(!between(bias_rel,-0.1, 0.1)), nb_out_10percent = sum(!between(bias_rel,-0.1, 0.1)), n= n())))
+
+final_wf_glmnet_0_3 <- workflow() %>%
+  add_recipe(auc_rec_0_3) %>%
+  add_model(final_glmnet_0_3) %>% 
+  fit(auc_train_test_0_3)
+
+predict_0_3=predict(final_wf_glmnet_0_3,auc_train_test_0_3)%>%
+     bind_cols(auc=auc_train_test_0_3$auc) %>%
+  mutate (bias_rel = (.pred - auc)/auc,
+          bias_rel_square = bias_rel * bias_rel)
+
+rmarkdown::paged_table(as.data.frame(predict_0_3 %>% summarise(biais_rel = mean(bias_rel), relative_rmse = sqrt(mean(bias_rel_square)),biais_out_20percent = mean(!between(bias_rel,-0.2, 0.2)), nb_out_20percent = sum(!between(bias_rel,-0.2, 0.2)),biais_out_10percent = mean(!between(bias_rel,-0.1, 0.1)), nb_out_10percent = sum(!between(bias_rel,-0.1, 0.1)), n= n())))
+
+
+
+# xgboost
+
+ #model
+xgb_spec <- boost_tree(mode = "regression",
+                        mtry = tune(),
+                        trees = 1000,
+                        min_n = tune(),
+                        tree_depth = tune(),
+                        sample_size=tune(),
+                        learn_rate = tune()) %>% set_engine("xgboost")
+
+#workflow model+recipe
+xgb_wf_0_3 <- workflow() %>%
+  add_recipe(auc_rec_0_3) %>%
+  add_model(xgb_spec)
+#
+##hyperparameters
+set.seed(2345)
+auc_folds_0_3 <- vfold_cv(auc_train_train_0_3)#par défaut 10 fois
+
+#tuning
+set.seed(345)
+tune_xgb <- tune_grid(
+  xgb_wf_0_3,
+  resamples = auc_folds_0_3,
+  grid = 30)
+
+
+#visualisatin resultats
+tune_xgb %>%
+  collect_metrics() %>%
+  filter(.metric == "rmse") %>%
+  dplyr::select(mean, min_n, mtry, learn_rate, tree_depth,sample_size) %>%
+  pivot_longer(min_n:tree_depth,
+               values_to = "value",
+               names_to = "parameter"
+  ) %>%
+  ggplot(aes(value, mean, color = parameter)) +
+  geom_point(show.legend = FALSE) +
+  facet_wrap(~parameter, scales = "free_x") +
+  labs(x = NULL, y = "RMSE")
+
+#choix du best model
+best_rmse_xgb_0_3 <- select_best(tune_xgb)
+
+final_xgb_0_3<- finalize_model(
+  xgb_spec,
+  best_rmse_xgb_0_3
+)
+
+final_xgb_0_3
+
+final_xgb_0_3 %>%
+  set_engine("xgboost", importance = "permutation") %>%
+  fit(auc ~ .,
+      data = juice(auc_prep_recipe_0_3)
+  ) %>%
+  vip::vip(geom = "col")
+
+#finalize workflow
+final_wf_xgb_0_3 <- workflow() %>%
+  add_recipe(auc_rec_0_3) %>%
+  add_model(final_xgb_0_3)%>%
+  fit(auc_train_train_0_3)
+
+###resample#####
+set.seed(456)
+folds_0_3 <- vfold_cv(auc_train_train_0_3)#par défaut 10 fois
+set.seed(123)
+xgb_rs_0_3 <- fit_resamples(object = final_wf_xgb_0_3, resamples = folds_0_3, control = control_resamples(verbose=T, save_pred = T))
+
+ ##perf resample
+xgb_rs_0_3 %>% collect_metrics()
+
+pred_obs_xgb_0_3 <- xgb_rs_0_3 %>% collect_predictions() %>%
+   mutate (bias_rel = (.pred - auc)/auc,
+          bias_rel_square = bias_rel * bias_rel)
+
+
+#perfs
+mean(pred_obs_xgb_0_3$bias_rel)
+
+sqrt(mean(pred_obs_xgb_0_3$bias_rel_square))
+
+xgb_rs_0_3 %>%
+  collect_predictions() %>%
+  ggplot(mapping = aes(x = .pred, y = auc)) + 
+  geom_point() +
+  geom_smooth(method=lm) 
+
+rmarkdown::paged_table(as.data.frame(pred_obs_xgb_0_3 %>% summarise(biais_rel = mean(bias_rel), relative_rmse = sqrt(mean(bias_rel_square)),biais_out_20percent = mean(!between(bias_rel,-0.2, 0.2)), nb_out_20percent = sum(!between(bias_rel,-0.2, 0.2)),biais_out_10percent = mean(!between(bias_rel,-0.1, 0.1)), nb_out_10percent = sum(!between(bias_rel,-0.1, 0.1)), n= n())))
+
+final_wf_xgb_0_3 <- workflow() %>%
+  add_recipe(auc_rec_0_3) %>%
+  add_model(final_xgb_0_3) %>% 
+  fit(auc_train_test_0_3)
+
+predict_0_3=predict(final_wf_xgb_0_3,auc_train_test_0_3)%>%
+     bind_cols(auc=auc_train_test_0_3$auc) %>%
+  mutate (bias_rel = (.pred - auc)/auc,
+          bias_rel_square = bias_rel * bias_rel)
+
+rmarkdown::paged_table(as.data.frame(predict_0_3 %>% summarise(biais_rel = mean(bias_rel), relative_rmse = sqrt(mean(bias_rel_square)),biais_out_20percent = mean(!between(bias_rel,-0.2, 0.2)), nb_out_20percent = sum(!between(bias_rel,-0.2, 0.2)),biais_out_10percent = mean(!between(bias_rel,-0.1, 0.1)), nb_out_10percent = sum(!between(bias_rel,-0.1, 0.1)), n= n())))
+
+  #### mars
+
+# workflow mars
+
+mars_spec <- mars(num_terms = tune(), prod_degree = tune()) %>%
+  set_engine("earth") %>%
+  set_mode("regression")
+
+#workflow model+recipe
+mars_wf_0_3 <- workflow() %>%
+  add_recipe(auc_rec_0_3) %>%
+  add_model(mars_spec)
+
+set.seed(345)
+#on reaffine grid
+mars_grid <- grid_regular(
+  num_terms(range = c(1L, 36L)),
+  prod_degree(range = c(1L, 2L)),
+  levels = 20
+)
+
+mars_grid
+
+
+
+##hyperparameters
+set.seed(2345)
+env_folds_0_3 <- vfold_cv(auc_train_train_0_3)#par défaut 10 fois
+
+
+#retune
+set.seed(456)
+library(earth)
+regular_res_0_3 <- tune_grid(
+ mars_wf_0_3,
+ resamples = env_folds_0_3,
+ grid = mars_grid)
+
+
+
+
+#visualisation
+regular_res_0_3 %>%
+  collect_metrics() %>%
+  filter(.metric == "rmse") %>%
+  mutate(prod_degree = factor(prod_degree)) %>%
+  ggplot(aes(num_terms, mean, color = prod_degree)) +
+  geom_line(alpha = 0.5, size = 1.5) +
+  geom_point() +
+  labs(y = "RMSE")
+
+#visualisation des résultats
+library(vip)
+#choix du best model
+best_rmse_mars_0_3 <- select_best(regular_res_0_3)
+
+final_mars_0_3 <- finalize_model(
+  mars_spec,
+  best_rmse_mars_0_3
+)
+
+final_mars_0_3
+
+final_mars_0_3 %>%
+  set_engine("earth") %>%
+  fit(auc ~ .,
+      data = juice(auc_prep_recipe_0_3)
+  ) %>%
+  vip(geom = "col")
+
+
+#finalize workflow
+final_wf_mars_0_3 <- workflow() %>%
+  add_recipe(auc_rec_0_3) %>%
+  add_model(final_mars_0_3)
+
+###resample#####
+set.seed(456)
+folds_0_3<- vfold_cv(auc_train_train_0_3)#par défaut 10 fois
+set.seed(123)
+mars_rs_0_3 <- fit_resamples(object = final_wf_mars_0_3, resamples = folds_0_3, control = control_resamples(verbose=T, save_pred = T))
+
+##perf resample
+mars_rs_0_3 %>% collect_metrics()
+
+#perfs
+pred_obs_mars_0_3 <- mars_rs_0_3 %>% collect_predictions() %>%
+   mutate (bias_rel = (.pred - auc)/auc,
+          bias_rel_square = bias_rel * bias_rel)
+
+mean(pred_obs_mars_0_3$bias_rel)
+
+sqrt(mean(pred_obs_mars_0_3$bias_rel_square))
+
+mars_rs_0_3 %>%
+  collect_predictions() %>%
+  ggplot(mapping = aes(x = .pred, y = auc)) + 
+  geom_point() +
+  geom_smooth(method=lm) 
+
+
+rmarkdown::paged_table(as.data.frame(pred_obs_mars_0_3 %>% summarise(biais_rel = mean(bias_rel), relative_rmse = sqrt(mean(bias_rel_square)),biais_out_20percent = mean(!between(bias_rel,-0.2, 0.2)), nb_out_20percent = sum(!between(bias_rel,-0.2, 0.2)),biais_out_10percent = mean(!between(bias_rel,-0.1, 0.1)), nb_out_10percent = sum(!between(bias_rel,-0.1, 0.1)), n= n())))
+
+final_wf_mars_0_3 <- workflow() %>%
+  add_recipe(auc_rec_0_3) %>%
+  add_model(final_mars_0_3) %>% 
+  fit(auc_train_test_0_3)
+
+predict_0_3=predict(final_wf_mars_0_3,auc_train_test_0_3)%>%
+     bind_cols(auc=auc_train_test_0_3$auc) %>%
+  mutate (bias_rel = (.pred - auc)/auc,
+          bias_rel_square = bias_rel * bias_rel)
+
+rmarkdown::paged_table(as.data.frame(predict_0_3 %>% summarise(biais_rel = mean(bias_rel), relative_rmse = sqrt(mean(bias_rel_square)),biais_out_20percent = mean(!between(bias_rel,-0.2, 0.2)), nb_out_20percent = sum(!between(bias_rel,-0.2, 0.2)),biais_out_10percent = mean(!between(bias_rel,-0.1, 0.1)), nb_out_10percent = sum(!between(bias_rel,-0.1, 0.1)), n= n())))
+
+
+### random forrest
+
+# #model
+
+
+rf_spec <- rand_forest(mode = "regression",
+                        mtry = tune(),
+                        trees = 1000,
+                        min_n = tune()
+                       ) %>% set_engine("ranger", importance = "permutation")
+
+
+
+#workflow model+recipe
+rf_wf <- workflow() %>%
+  add_recipe(auc_rec_0_3) %>%
+  add_model(rf_spec)
+#
+##hyperparameters
+set.seed(2345)
+folds_0_3 <- vfold_cv(auc_train_train_0_3)#par défaut 10 fois
+
+#tuning
+library(ranger)
+set.seed(345)
+tune_rf <- tune_grid(
+  rf_wf,
+  resamples = folds_0_3,
+  grid = 30
+)
+
+#visualisatin resultats
+
+autoplot(tune_rf) + 
+  ggtitle("tuning hyperparameter")
+
+#choix du best model
+best_rf_0_3 <- select_best(tune_rf)
+
+final_rf_0_3 <- finalize_model(
+  rf_spec,
+  best_rf_0_3
+)
+
+final_rf_0_3
+
+#finalize workflow
+final_wf_rf_0_3 <- workflow() %>%
+  add_recipe(auc_rec_0_3) %>%
+  add_model(final_rf_0_3)
+
+###resample#####
+set.seed(456)
+folds_cv <- vfold_cv(auc_train_train_0_3)#par défaut 10 fois
+
+## 10 fold CV
+rf_rs_0_3<- fit_resamples(object = final_wf_rf_0_3, resamples = folds_cv, control = control_resamples(verbose=T, save_pred = T))
+
+##perf resample
+rf_rs_0_3 %>% collect_metrics()
+
+
+#perfs
+pred_obs_rf_0_3 <- rf_rs_0_3 %>% collect_predictions() %>%
+   mutate (bias_rel = (.pred - auc)/auc,
+          bias_rel_square = bias_rel * bias_rel)
+
+
+
+
+rmarkdown::paged_table(as.data.frame(pred_obs_rf_0_3 %>% summarise(biais_rel = mean(bias_rel), relative_rmse = sqrt(mean(bias_rel_square)),biais_out_20percent = mean(!between(bias_rel,-0.2, 0.2)), nb_out_20percent = sum(!between(bias_rel,-0.2, 0.2)),biais_out_10percent = mean(!between(bias_rel,-0.1, 0.1)), nb_out_10percent = sum(!between(bias_rel,-0.1, 0.1)), n= n())))
+
+final_wf_rf_0_3 <- workflow() %>%
+  add_recipe(auc_rec_0_3) %>%
+  add_model(final_rf_0_3) %>% 
+  fit(auc_train_train_0_3)
+
+predict_0_3_rf=predict(final_wf_rf_0_3,auc_train_test_0_3)%>%
+     bind_cols(auc=auc_train_test_0_3$auc) %>%
+  mutate (bias_rel = (.pred - auc)/auc,
+          bias_rel_square = bias_rel * bias_rel)
+
+rmarkdown::paged_table(as.data.frame(predict_0_3_rf %>% summarise(biais_rel = mean(bias_rel), relative_rmse = sqrt(mean(bias_rel_square)),biais_out_20percent = mean(!between(bias_rel,-0.2, 0.2)), nb_out_20percent = sum(!between(bias_rel,-0.2, 0.2)),biais_out_10percent = mean(!between(bias_rel,-0.1, 0.1)), nb_out_10percent = sum(!between(bias_rel,-0.1, 0.1)), n= n())))
+
+
+#### SVM model
+
+svm_spec <- svm_linear() %>%
+  set_mode("regression") %>%
+  set_engine("LiblineaR")
+
+svm_wf <- workflow() %>%
+  add_recipe(auc_rec_0_3)
+
+library(LiblineaR)
+
+svm_fit <- svm_wf %>%
+  add_model(svm_spec) %>%
+  fit(data = auc_train_train_0_3)
+
+set.seed(123)
+
+svm_folds_0_3 <- vfold_cv(auc_train_train_0_3)
+
+svm_folds_0_3
+
+set.seed(123)
+
+svm_rs_0_3 <- fit_resamples(
+  svm_wf %>% add_model(svm_spec),
+  svm_folds_0_3,
+  control = control_resamples(save_pred = TRUE)
+)
+
+collect_metrics(svm_rs_0_3)
+
+
+#perfs
+pred_obs_SVM_0_3 <- svm_rs_0_3 %>% collect_predictions() %>%
+   mutate (bias_rel = (.pred - auc)/auc,
+          bias_rel_square = bias_rel * bias_rel)
+
+
+
+
+rmarkdown::paged_table(as.data.frame(pred_obs_SVM_0_3 %>% summarise(biais_rel = mean(bias_rel), relative_rmse = sqrt(mean(bias_rel_square)),biais_out_20percent = mean(!between(bias_rel,-0.2, 0.2)), nb_out_20percent = sum(!between(bias_rel,-0.2, 0.2)),biais_out_10percent = mean(!between(bias_rel,-0.1, 0.1)), nb_out_10percent = sum(!between(bias_rel,-0.1, 0.1)), n= n())))
+
+pred_obs_SVM_0_3 <- workflow() %>%
+  add_recipe(auc_rec_0_3) %>%
+  add_model(svm_spec) %>% 
+  fit(auc_train_train_0_3)
+
+predict_0_3_svm=predict(pred_obs_SVM_0_3,auc_train_test_0_3)%>%
+     bind_cols(auc=auc_train_test_0_3$auc) %>%
+  mutate (bias_rel = (.pred - auc)/auc,
+          bias_rel_square = bias_rel * bias_rel)
+
+rmarkdown::paged_table(as.data.frame(predict_0_3_svm %>% summarise(biais_rel = mean(bias_rel), relative_rmse = sqrt(mean(bias_rel_square)),biais_out_20percent = mean(!between(bias_rel,-0.2, 0.2)), nb_out_20percent = sum(!between(bias_rel,-0.2, 0.2)),biais_out_10percent = mean(!between(bias_rel,-0.1, 0.1)), nb_out_10percent = sum(!between(bias_rel,-0.1, 0.1)), n= n())))
+
+```
+
+times le 0/4
+
+```{r}
+auc_0_4 <- auc_1 %>% select(Pds,Clcreat,age,taille,SEX,SC_mosteller,greffe,amt,out_0,out_4,auc)
+
+
+set.seed(123)
+
+splits <- initial_split(auc_0_4, strata = auc)
+auc_train_0_4  <- training(splits)
+auc_test_0_4   <- testing(splits)
+
+set.seed(234)
+auc_set_0_4  <- validation_split(auc_train_0_4, 
+                            strata = auc, 
+                            prop = 0.80)
+
+auc_train_train_0_4<- analysis(auc_set_0_4$splits[[1]])
+auc_train_test_0_4<-assessment(auc_set_0_4$splits[[1]])
+
+auc_rec_0_4 <- recipe(auc ~ ., data = auc_train_train_0_4) %>%
+  step_normalize(all_numeric(), -all_outcomes()) %>%
+  step_dummy(greffe,SEX,one_hot=T) 
+
+auc_prep_recipe_0_4 <-  prep(auc_rec_0_4)
+auc_train_recipe_0_4 <-juice(auc_prep_recipe_0_4)
+summary(auc_train_recipe_0_4)
+
+
+### glmnet
+glmnet_spec <- linear_reg(penalty=tune(),mixture = 1) %>%
+  set_engine("glmnet") %>%
+  set_mode("regression")
+
+#workflow model+recipe
+glmnet_wf_0_4 <- workflow() %>%
+  add_recipe(auc_rec_0_4) %>%
+  add_model(glmnet_spec)
+
+
+##hyperparameters
+set.seed(2345)
+auc_folds_0_4 <- vfold_cv(auc_train_train_0_4, v=10)#par défaut 10 fois
+
+#tuning
+set.seed(345)
+tune_glmnet_0_4 <- tune_grid(
+  glmnet_wf_0_4,
+  resamples = auc_folds_0_4,
+  grid = 30)
+
+
+tune_glmnet_0_4%>% collect_metrics()
+
+best_rmse_glmnet_0_4 <- select_best(tune_glmnet_0_2)
+final_glmnet_0_4 <- finalize_model(
+  glmnet_spec,
+  best_rmse_glmnet_0_4
+)
+
+final_glmnet_0_4
+
+
+library(vip)
+
+#finalize workflow
+final_wf_glmnet_0_4 <- workflow() %>%
+  add_recipe(auc_rec_0_4) %>%
+  add_model(final_glmnet_0_4)
+
+###resample#####
+set.seed(456)
+folds_0_4 <- vfold_cv(auc_train_train_0_4)#par défaut 10 fois
+set.seed(123)
+glmnet_rs_0_4 <- fit_resamples(object = final_wf_glmnet_0_4, resamples = folds_0_4, control = control_resamples(verbose=T, save_pred = T))
+
+##perf resample
+glmnet_rs_0_4 %>% collect_metrics()
+
+pred_obs_glmnet_0_4 <- glmnet_rs_0_4 %>% collect_predictions() %>%
+   mutate (bias_rel = (.pred - auc)/auc,
+          bias_rel_square = bias_rel * bias_rel)
+
+
+#perfs
+mean(pred_obs_glmnet_0_4$bias_rel)
+sqrt(mean(pred_obs_glmnet_0_4$bias_rel_square))
+
+glmnet_rs_0_4 %>%
+  collect_predictions() %>%
+  ggplot(mapping = aes(x = .pred, y = auc)) + 
+  geom_point() +
+  geom_smooth(method=lm) 
+
+rmarkdown::paged_table(as.data.frame(pred_obs_glmnet_0_4 %>% summarise(biais_rel = mean(bias_rel), relative_rmse = sqrt(mean(bias_rel_square)),biais_out_20percent = mean(!between(bias_rel,-0.2, 0.2)), nb_out_20percent = sum(!between(bias_rel,-0.2, 0.2)),biais_out_10percent = mean(!between(bias_rel,-0.1, 0.1)), nb_out_10percent = sum(!between(bias_rel,-0.1, 0.1)), n= n())))
+
+final_wf_glmnet_0_4 <- workflow() %>%
+  add_recipe(auc_rec_0_4) %>%
+  add_model(final_glmnet_0_4) %>% 
+  fit(auc_train_test_0_4)
+
+predict_0_4=predict(final_wf_glmnet_0_4,auc_train_test_0_4)%>%
+     bind_cols(auc=auc_train_test_0_4$auc) %>%
+  mutate (bias_rel = (.pred - auc)/auc,
+          bias_rel_square = bias_rel * bias_rel)
+
+rmarkdown::paged_table(as.data.frame(predict_0_4 %>% summarise(biais_rel = mean(bias_rel), relative_rmse = sqrt(mean(bias_rel_square)),biais_out_20percent = mean(!between(bias_rel,-0.2, 0.2)), nb_out_20percent = sum(!between(bias_rel,-0.2, 0.2)),biais_out_10percent = mean(!between(bias_rel,-0.1, 0.1)), nb_out_10percent = sum(!between(bias_rel,-0.1, 0.1)), n= n())))
+
+
+# xgboost
+
+ #model
+xgb_spec <- boost_tree(mode = "regression",
+                        mtry = tune(),
+                        trees = 1000,
+                        min_n = tune(),
+                        tree_depth = tune(),
+                        sample_size=tune(),
+                        learn_rate = tune()) %>% set_engine("xgboost")
+
+#workflow model+recipe
+xgb_wf_0_4 <- workflow() %>%
+  add_recipe(auc_rec_0_4) %>%
+  add_model(xgb_spec)
+#
+##hyperparameters
+set.seed(2345)
+auc_folds_0_4 <- vfold_cv(auc_train_train_0_4)#par défaut 10 fois
+
+#tuning
+set.seed(345)
+tune_xgb <- tune_grid(
+  xgb_wf_0_4,
+  resamples = auc_folds_0_4,
+  grid = 30)
+
+
+#visualisatin resultats
+tune_xgb %>%
+  collect_metrics() %>%
+  filter(.metric == "rmse") %>%
+  dplyr::select(mean, min_n, mtry, learn_rate, tree_depth,sample_size) %>%
+  pivot_longer(min_n:tree_depth,
+               values_to = "value",
+               names_to = "parameter"
+  ) %>%
+  ggplot(aes(value, mean, color = parameter)) +
+  geom_point(show.legend = FALSE) +
+  facet_wrap(~parameter, scales = "free_x") +
+  labs(x = NULL, y = "RMSE")
+
+#choix du best model
+best_rmse_xgb_0_4 <- select_best(tune_xgb)
+
+final_xgb_0_4<- finalize_model(
+  xgb_spec,
+  best_rmse_xgb_0_4
+)
+
+final_xgb_0_4
+
+final_xgb_0_4 %>%
+  set_engine("xgboost", importance = "permutation") %>%
+  fit(auc ~ .,
+      data = juice(auc_prep_recipe_0_4)
+  ) %>%
+  vip::vip(geom = "col")
+
+#finalize workflow
+final_wf_xgb_0_4 <- workflow() %>%
+  add_recipe(auc_rec_0_4) %>%
+  add_model(final_xgb_0_4)%>%
+  fit(auc_train_train_0_4)
+
+###resample#####
+set.seed(456)
+folds_0_4 <- vfold_cv(auc_train_train_0_4)#par défaut 10 fois
+set.seed(123)
+xgb_rs_0_4 <- fit_resamples(object = final_wf_xgb_0_4, resamples = folds_0_4, control = control_resamples(verbose=T, save_pred = T))
+
+##perf resample
+xgb_rs_0_4 %>% collect_metrics()
+
+pred_obs_xgb_0_4 <- xgb_rs_0_4%>% collect_predictions() %>%
+   mutate (bias_rel = (.pred - auc)/auc,
+          bias_rel_square = bias_rel * bias_rel)
+
+
+#perfs
+mean(pred_obs_xgb_0_4$bias_rel)
+
+sqrt(mean(pred_obs_xgb_0_4$bias_rel_square))
+
+xgb_rs_0_4 %>%
+  collect_predictions() %>%
+  ggplot(mapping = aes(x = .pred, y = auc)) + 
+  geom_point() +
+  geom_smooth(method=lm) 
+
+rmarkdown::paged_table(as.data.frame(pred_obs_xgb_0_4 %>% summarise(biais_rel = mean(bias_rel), relative_rmse = sqrt(mean(bias_rel_square)),biais_out_20percent = mean(!between(bias_rel,-0.2, 0.2)), nb_out_20percent = sum(!between(bias_rel,-0.2, 0.2)),biais_out_10percent = mean(!between(bias_rel,-0.1, 0.1)), nb_out_10percent = sum(!between(bias_rel,-0.1, 0.1)), n= n())))
+
+final_wf_xgb_0_4 <- workflow() %>%
+  add_recipe(auc_rec_0_4) %>%
+  add_model(final_xgb_0_4) %>% 
+  fit(auc_train_test_0_4)
+
+predict_0_4=predict(final_wf_xgb_0_4,auc_train_test_0_4)%>%
+     bind_cols(auc=auc_train_test_0_4$auc) %>%
+  mutate (bias_rel = (.pred - auc)/auc,
+          bias_rel_square = bias_rel * bias_rel)
+
+rmarkdown::paged_table(as.data.frame(predict_0_4 %>% summarise(biais_rel = mean(bias_rel), relative_rmse = sqrt(mean(bias_rel_square)),biais_out_20percent = mean(!between(bias_rel,-0.2, 0.2)), nb_out_20percent = sum(!between(bias_rel,-0.2, 0.2)),biais_out_10percent = mean(!between(bias_rel,-0.1, 0.1)), nb_out_10percent = sum(!between(bias_rel,-0.1, 0.1)), n= n())))
+
+
+
+#### mars
+
+# workflow mars
+
+mars_spec <- mars(num_terms = tune(), prod_degree = tune()) %>%
+  set_engine("earth") %>%
+  set_mode("regression")
+
+#workflow model+recipe
+mars_wf_0_4 <- workflow() %>%
+  add_recipe(auc_rec_0_4) %>%
+  add_model(mars_spec)
+
+set.seed(345)
+#on reaffine grid
+mars_grid <- grid_regular(
+  num_terms(range = c(1L, 36L)),
+  prod_degree(range = c(1L, 2L)),
+  levels = 20
+)
+
+mars_grid
+
+
+
+##hyperparameters
+set.seed(2345)
+env_folds_0_4 <- vfold_cv(auc_train_train_0_4)#par défaut 10 fois
+
+
+#retune
+set.seed(456)
+library(earth)
+regular_res_0_4 <- tune_grid(
+ mars_wf_0_4,
+ resamples = env_folds_0_4,
+ grid = mars_grid)
+
+
+regular_res_0_4
+
+#visualisation
+regular_res_0_4 %>%
+  collect_metrics() %>%
+  filter(.metric == "rmse") %>%
+  mutate(prod_degree = factor(prod_degree)) %>%
+  ggplot(aes(num_terms, mean, color = prod_degree)) +
+  geom_line(alpha = 0.5, size = 1.5) +
+  geom_point() +
+  labs(y = "RMSE")
+
+#visualisation des résultats
+library(vip)
+#choix du best model
+best_rmse_mars_0_4 <- select_best(regular_res_0_4)
+
+final_mars_0_4 <- finalize_model(
+  mars_spec,
+  best_rmse_mars_0_4
+)
+
+final_mars_0_4
+
+final_mars_0_4 %>%
+  set_engine("earth") %>%
+  fit(auc ~ .,
+      data = juice(auc_prep_recipe_0_4)
+  ) %>%
+  vip(geom = "col")
+
+
+#finalize workflow
+final_wf_mars_0_4 <- workflow() %>%
+  add_recipe(auc_rec_0_4) %>%
+  add_model(final_mars_0_4)
+
+###resample#####
+set.seed(456)
+folds_0_4 <- vfold_cv(auc_train_train_0_4)#par défaut 10 fois
+set.seed(123)
+mars_rs_0_4 <- fit_resamples(object = final_wf_mars_0_4, resamples = folds_0_4, control = control_resamples(verbose=T, save_pred = T))
+
+##perf resample
+mars_rs_0_4 %>% collect_metrics()
+
+#perfs
+pred_obs_mars_0_4 <- mars_rs_0_4 %>% collect_predictions() %>%
+   mutate (bias_rel = (.pred - auc)/auc,
+          bias_rel_square = bias_rel * bias_rel)
+
+mean(pred_obs_mars_0_4$bias_rel)
+
+sqrt(mean(pred_obs_mars_0_4$bias_rel_square))
+
+mars_rs_0_4 %>%
+  collect_predictions() %>%
+  ggplot(mapping = aes(x = .pred, y = auc)) + 
+  geom_point() +
+  geom_smooth(method=lm) 
+
+
+rmarkdown::paged_table(as.data.frame(pred_obs_mars_0_4 %>% summarise(biais_rel = mean(bias_rel), relative_rmse = sqrt(mean(bias_rel_square)),biais_out_20percent = mean(!between(bias_rel,-0.2, 0.2)), nb_out_20percent = sum(!between(bias_rel,-0.2, 0.2)),biais_out_10percent = mean(!between(bias_rel,-0.1, 0.1)), nb_out_10percent = sum(!between(bias_rel,-0.1, 0.1)), n= n())))
+
+final_wf_mars_0_4 <- workflow() %>%
+  add_recipe(auc_rec_0_4) %>%
+  add_model(final_mars_0_4) %>% 
+  fit(auc_train_test_0_4)
+
+predict_0_4=predict(final_wf_mars_0_4,auc_train_test_0_4)%>%
+     bind_cols(auc=auc_train_test_0_4$auc) %>%
+  mutate (bias_rel = (.pred - auc)/auc,
+          bias_rel_square = bias_rel * bias_rel)
+
+rmarkdown::paged_table(as.data.frame(predict_0_4 %>% summarise(biais_rel = mean(bias_rel), relative_rmse = sqrt(mean(bias_rel_square)),biais_out_20percent = mean(!between(bias_rel,-0.2, 0.2)), nb_out_20percent = sum(!between(bias_rel,-0.2, 0.2)),biais_out_10percent = mean(!between(bias_rel,-0.1, 0.1)), nb_out_10percent = sum(!between(bias_rel,-0.1, 0.1)), n= n())))
+
+
+### random forrest
+
+# #model
+
+
+rf_spec <- rand_forest(mode = "regression",
+                        mtry = tune(),
+                        trees = 1000,
+                        min_n = tune()
+                       ) %>% set_engine("ranger", importance = "permutation")
+
+
+
+#workflow model+recipe
+rf_wf <- workflow() %>%
+  add_recipe(auc_rec_0_4) %>%
+  add_model(rf_spec)
+#
+##hyperparameters
+set.seed(2345)
+folds_0_4 <- vfold_cv(auc_train_train_0_4)#par défaut 10 fois
+
+#tuning
+library(ranger)
+set.seed(345)
+tune_rf <- tune_grid(
+  rf_wf,
+  resamples = folds_0_4,
+  grid = 30
+)
+
+#visualisatin resultats
+
+autoplot(tune_rf) + 
+  ggtitle("tuning hyperparameter")
+
+#choix du best model
+best_rf_0_4 <- select_best(tune_rf)
+
+final_rf_0_4 <- finalize_model(
+  rf_spec,
+  best_rf_0_4
+)
+
+final_rf_0_4
+
+#finalize workflow
+final_wf_rf_0_4 <- workflow() %>%
+  add_recipe(auc_rec_0_4) %>%
+  add_model(final_rf_0_4)
+
+###resample#####
+set.seed(456)
+folds_cv <- vfold_cv(auc_train_train_0_4)#par défaut 10 fois
+
+## 10 fold CV
+rf_rs_0_4<- fit_resamples(object = final_wf_rf_0_4, resamples = folds_cv, control = control_resamples(verbose=T, save_pred = T))
+
+##perf resample
+rf_rs_0_4 %>% collect_metrics()
+
+
+#perfs
+pred_obs_rf_0_4 <- rf_rs_0_4 %>% collect_predictions() %>%
+   mutate (bias_rel = (.pred - auc)/auc,
+          bias_rel_square = bias_rel * bias_rel)
+
+
+
+
+rmarkdown::paged_table(as.data.frame(pred_obs_rf_0_4 %>% summarise(biais_rel = mean(bias_rel), relative_rmse = sqrt(mean(bias_rel_square)),biais_out_20percent = mean(!between(bias_rel,-0.2, 0.2)), nb_out_20percent = sum(!between(bias_rel,-0.2, 0.2)),biais_out_10percent = mean(!between(bias_rel,-0.1, 0.1)), nb_out_10percent = sum(!between(bias_rel,-0.1, 0.1)), n= n())))
+
+final_wf_rf_0_4 <- workflow() %>%
+  add_recipe(auc_rec_0_4) %>%
+  add_model(final_rf_0_4) %>% 
+  fit(auc_train_train_0_4)
+
+predict_0_4_rf=predict(final_wf_rf_0_4,auc_train_test_0_4)%>%
+     bind_cols(auc=auc_train_test_0_4$auc) %>%
+  mutate (bias_rel = (.pred - auc)/auc,
+          bias_rel_square = bias_rel * bias_rel)
+
+rmarkdown::paged_table(as.data.frame(predict_0_4_rf %>% summarise(biais_rel = mean(bias_rel), relative_rmse = sqrt(mean(bias_rel_square)),biais_out_20percent = mean(!between(bias_rel,-0.2, 0.2)), nb_out_20percent = sum(!between(bias_rel,-0.2, 0.2)),biais_out_10percent = mean(!between(bias_rel,-0.1, 0.1)), nb_out_10percent = sum(!between(bias_rel,-0.1, 0.1)), n= n())))
+
+
+#### SVM model
+
+svm_spec <- svm_linear() %>%
+  set_mode("regression") %>%
+  set_engine("LiblineaR")
+
+svm_wf <- workflow() %>%
+  add_recipe(auc_rec_0_4)
+
+library(LiblineaR)
+
+svm_fit <- svm_wf %>%
+  add_model(svm_spec) %>%
+  fit(data = auc_train_train_0_4)
+
+set.seed(123)
+
+svm_folds_0_4 <- vfold_cv(auc_train_train_0_4)
+
+svm_folds_0_4
+
+set.seed(123)
+
+svm_rs_0_4 <- fit_resamples(
+  svm_wf %>% add_model(svm_spec),
+  svm_folds_0_4,
+  control = control_resamples(save_pred = TRUE)
+)
+
+collect_metrics(svm_rs_0_4)
+
+
+#perfs
+pred_obs_SVM_0_4 <- svm_rs_0_4 %>% collect_predictions() %>%
+   mutate (bias_rel = (.pred - auc)/auc,
+          bias_rel_square = bias_rel * bias_rel)
+
+
+
+
+rmarkdown::paged_table(as.data.frame(pred_obs_SVM_0_4 %>% summarise(biais_rel = mean(bias_rel), relative_rmse = sqrt(mean(bias_rel_square)),biais_out_20percent = mean(!between(bias_rel,-0.2, 0.2)), nb_out_20percent = sum(!between(bias_rel,-0.2, 0.2)),biais_out_10percent = mean(!between(bias_rel,-0.1, 0.1)), nb_out_10percent = sum(!between(bias_rel,-0.1, 0.1)), n= n())))
+
+pred_obs_SVM_0_4 <- workflow() %>%
+  add_recipe(auc_rec_0_4) %>%
+  add_model(svm_spec) %>% 
+  fit(auc_train_train_0_4)
+
+predict_0_4_svm=predict(pred_obs_SVM_0_4,auc_train_test_0_4)%>%
+     bind_cols(auc=auc_train_test_0_4$auc) %>%
+  mutate (bias_rel = (.pred - auc)/auc,
+          bias_rel_square = bias_rel * bias_rel)
+
+rmarkdown::paged_table(as.data.frame(predict_0_4_svm %>% summarise(biais_rel = mean(bias_rel), relative_rmse = sqrt(mean(bias_rel_square)),biais_out_20percent = mean(!between(bias_rel,-0.2, 0.2)), nb_out_20percent = sum(!between(bias_rel,-0.2, 0.2)),biais_out_10percent = mean(!between(bias_rel,-0.1, 0.1)), nb_out_10percent = sum(!between(bias_rel,-0.1, 0.1)), n= n())))
+
+```
+times 1/3
+
+```{r}
+auc_1_3 <- auc_1 %>% select(Pds,Clcreat,age,taille,SEX,SC_mosteller,greffe,amt,out_1,out_3,auc)
+
+
+set.seed(123)
+
+splits <- initial_split(auc_1_3, strata = auc)
+auc_train_1_3  <- training(splits)
+auc_test_1_3   <- testing(splits)
+
+set.seed(234)
+auc_set_1_3  <- validation_split(auc_train_1_3, 
+                            strata = auc, 
+                            prop = 0.80)
+
+auc_train_train_1_3<- analysis(auc_set_1_3$splits[[1]])
+auc_train_test_1_3<-assessment(auc_set_1_3$splits[[1]])
+
+auc_rec_1_3 <- recipe(auc ~ ., data = auc_train_train_1_3) %>%
+  step_normalize(all_numeric(), -all_outcomes()) %>%
+  step_dummy(greffe,SEX,one_hot=T) 
+
+auc_prep_recipe_1_3 <-  prep(auc_rec_1_3)
+auc_train_recipe_1_3 <-juice(auc_prep_recipe_1_3)
+summary(auc_train_recipe_1_3)
+
+
+### glmnet
+glmnet_spec <- linear_reg(penalty=tune(),mixture = 1) %>%
+  set_engine("glmnet") %>%
+  set_mode("regression")
+
+#workflow model+recipe
+glmnet_wf_1_3 <- workflow() %>%
+  add_recipe(auc_rec_1_3) %>%
+  add_model(glmnet_spec)
+
+
+##hyperparameters
+set.seed(2345)
+auc_folds_1_3 <- vfold_cv(auc_train_train_1_3, v=10)#par défaut 10 fois
+
+#tuning
+set.seed(345)
+tune_glmnet_1_3 <- tune_grid(
+  glmnet_wf_1_3,
+  resamples = auc_folds_1_3,
+  grid = 30)
+
+
+tune_glmnet_1_3%>% collect_metrics()
+
+best_rmse_glmnet_1_3 <- select_best(tune_glmnet_1_3)
+final_glmnet_1_3 <- finalize_model(
+  glmnet_spec,
+  best_rmse_glmnet_1_3
+)
+
+final_glmnet_1_3
+
+
+library(vip)
+
+#finalize workflow
+final_wf_glmnet_1_3<- workflow() %>%
+  add_recipe(auc_rec_1_3) %>%
+  add_model(final_glmnet_1_3)
+
+###resample#####
+set.seed(456)
+folds_1_3 <- vfold_cv(auc_train_train_1_3)#par défaut 10 fois
+set.seed(123)
+glmnet_rs_1_3 <- fit_resamples(object = final_wf_glmnet_1_3, resamples = folds_1_3, control = control_resamples(verbose=T, save_pred = T))
+
+##perf resample
+glmnet_rs_1_3 %>% collect_metrics()
+
+pred_obs_glmnet_1_3 <- glmnet_rs_1_3 %>% collect_predictions() %>%
+   mutate (bias_rel = (.pred - auc)/auc,
+          bias_rel_square = bias_rel * bias_rel)
+
+
+#perfs
+mean(pred_obs_glmnet_1_3$bias_rel)
+sqrt(mean(pred_obs_glmnet_1_3$bias_rel_square))
+
+glmnet_rs_1_3 %>%
+  collect_predictions() %>%
+  ggplot(mapping = aes(x = .pred, y = auc)) + 
+  geom_point() +
+  geom_smooth(method=lm) 
+
+rmarkdown::paged_table(as.data.frame(pred_obs_glmnet_1_3%>% summarise(biais_rel = mean(bias_rel), relative_rmse = sqrt(mean(bias_rel_square)),biais_out_20percent = mean(!between(bias_rel,-0.2, 0.2)), nb_out_20percent = sum(!between(bias_rel,-0.2, 0.2)),biais_out_10percent = mean(!between(bias_rel,-0.1, 0.1)), nb_out_10percent = sum(!between(bias_rel,-0.1, 0.1)), n= n())))
+
+final_wf_glmnet_1_3 <- workflow() %>%
+  add_recipe(auc_rec_1_3) %>%
+  add_model(final_glmnet_1_3) %>% 
+  fit(auc_train_test_1_3)
+
+predict_1_3=predict(final_wf_glmnet_1_3,auc_train_test_1_3)%>%
+     bind_cols(auc=auc_train_test_1_3$auc) %>%
+  mutate (bias_rel = (.pred - auc)/auc,
+          bias_rel_square = bias_rel * bias_rel)
+
+rmarkdown::paged_table(as.data.frame(predict_1_3 %>% summarise(biais_rel = mean(bias_rel), relative_rmse = sqrt(mean(bias_rel_square)),biais_out_20percent = mean(!between(bias_rel,-0.2, 0.2)), nb_out_20percent = sum(!between(bias_rel,-0.2, 0.2)),biais_out_10percent = mean(!between(bias_rel,-0.1, 0.1)), nb_out_10percent = sum(!between(bias_rel,-0.1, 0.1)), n= n())))
+
+
+# xgboost
+
+ #model
+xgb_spec <- boost_tree(mode = "regression",
+                        mtry = tune(),
+                        trees = 1000,
+                        min_n = tune(),
+                        tree_depth = tune(),
+                        sample_size=tune(),
+                        learn_rate = tune()) %>% set_engine("xgboost")
+
+#workflow model+recipe
+xgb_wf_1_3<- workflow() %>%
+  add_recipe(auc_rec_1_3) %>%
+  add_model(xgb_spec)
+#
+##hyperparameters
+set.seed(2345)
+auc_folds_1_3 <- vfold_cv(auc_train_train_1_3)#par défaut 10 fois
+
+#tuning
+set.seed(345)
+tune_xgb <- tune_grid(
+  xgb_wf_1_3,
+  resamples = auc_folds_1_3,
+  grid = 30)
+
+
+#visualisatin resultats
+tune_xgb %>%
+  collect_metrics() %>%
+  filter(.metric == "rmse") %>%
+  dplyr::select(mean, min_n, mtry, learn_rate, tree_depth,sample_size) %>%
+  pivot_longer(min_n:tree_depth,
+               values_to = "value",
+               names_to = "parameter"
+  ) %>%
+  ggplot(aes(value, mean, color = parameter)) +
+  geom_point(show.legend = FALSE) +
+  facet_wrap(~parameter, scales = "free_x") +
+  labs(x = NULL, y = "RMSE")
+
+#choix du best model
+best_rmse_xgb_1_3 <- select_best(tune_xgb)
+
+final_xgb_1_3<- finalize_model(
+  xgb_spec,
+  best_rmse_xgb_1_3
+)
+
+final_xgb_1_3
+
+final_xgb_1_3 %>%
+  set_engine("xgboost", importance = "permutation") %>%
+  fit(auc ~ .,
+      data = juice(auc_prep_recipe_1_3)
+  ) %>%
+  vip::vip(geom = "col")
+
+#finalize workflow
+final_wf_xgb_1_3 <- workflow() %>%
+  add_recipe(auc_rec_1_3) %>%
+  add_model(final_xgb_1_3)%>%
+  fit(auc_train_train_1_3)
+
+###resample#####
+set.seed(456)
+folds_1_3 <- vfold_cv(auc_train_train_1_3)#par défaut 10 fois
+set.seed(123)
+xgb_rs_1_3 <- fit_resamples(object = final_wf_xgb_1_3, resamples = folds_1_3, control = control_resamples(verbose=T, save_pred = T))
+
+##perf resample
+xgb_rs_1_3 %>% collect_metrics()
+
+pred_obs_xgb_1_3 <- xgb_rs_1_3%>% collect_predictions() %>%
+   mutate (bias_rel = (.pred - auc)/auc,
+          bias_rel_square = bias_rel * bias_rel)
+
+
+#perfs
+mean(pred_obs_xgb_1_3$bias_rel)
+
+sqrt(mean(pred_obs_xgb_1_3$bias_rel_square))
+
+xgb_rs_1_3 %>%
+  collect_predictions() %>%
+  ggplot(mapping = aes(x = .pred, y = auc)) + 
+  geom_point() +
+  geom_smooth(method=lm) 
+
+rmarkdown::paged_table(as.data.frame(pred_obs_xgb_1_3 %>% summarise(biais_rel = mean(bias_rel), relative_rmse = sqrt(mean(bias_rel_square)),biais_out_20percent = mean(!between(bias_rel,-0.2, 0.2)), nb_out_20percent = sum(!between(bias_rel,-0.2, 0.2)),biais_out_10percent = mean(!between(bias_rel,-0.1, 0.1)), nb_out_10percent = sum(!between(bias_rel,-0.1, 0.1)), n= n())))
+
+final_wf_xgb_1_3 <- workflow() %>%
+  add_recipe(auc_rec_1_3) %>%
+  add_model(final_xgb_1_3) %>% 
+  fit(auc_train_test_1_3)
+
+predict_1_3=predict(final_wf_xgb_1_3,auc_train_test_1_3)%>%
+     bind_cols(auc=auc_train_test_1_3$auc) %>%
+  mutate (bias_rel = (.pred - auc)/auc,
+          bias_rel_square = bias_rel * bias_rel)
+
+rmarkdown::paged_table(as.data.frame(predict_1_3 %>% summarise(biais_rel = mean(bias_rel), relative_rmse = sqrt(mean(bias_rel_square)),biais_out_20percent = mean(!between(bias_rel,-0.2, 0.2)), nb_out_20percent = sum(!between(bias_rel,-0.2, 0.2)),biais_out_10percent = mean(!between(bias_rel,-0.1, 0.1)), nb_out_10percent = sum(!between(bias_rel,-0.1, 0.1)), n= n())))
+
+
+
+#### mars
+
+# workflow mars
+
+mars_spec <- mars(num_terms = tune(), prod_degree = tune()) %>%
+  set_engine("earth") %>%
+  set_mode("regression")
+
+#workflow model+recipe
+mars_wf_1_3 <- workflow() %>%
+  add_recipe(auc_rec_1_3) %>%
+  add_model(mars_spec)
+
+set.seed(345)
+#on reaffine grid
+mars_grid <- grid_regular(
+  num_terms(range = c(1L, 36L)),
+  prod_degree(range = c(1L, 2L)),
+  levels = 20
+)
+
+mars_grid
+
+
+
+##hyperparameters
+set.seed(2345)
+env_folds_1_3 <- vfold_cv(auc_train_train_1_3)#par défaut 10 fois
+
+
+#retune
+set.seed(456)
+library(earth)
+regular_res_1_3 <- tune_grid(
+ mars_wf_1_3,
+ resamples = env_folds_1_3,
+ grid = mars_grid)
+
+
+regular_res_1_3
+
+#visualisation
+regular_res_1_3 %>%
+  collect_metrics() %>%
+  filter(.metric == "rmse") %>%
+  mutate(prod_degree = factor(prod_degree)) %>%
+  ggplot(aes(num_terms, mean, color = prod_degree)) +
+  geom_line(alpha = 0.5, size = 1.5) +
+  geom_point() +
+  labs(y = "RMSE")
+
+#visualisation des résultats
+library(vip)
+#choix du best model
+best_rmse_mars_1_3 <- select_best(regular_res_1_3)
+
+final_mars_1_3 <- finalize_model(
+  mars_spec,
+  best_rmse_mars_1_3
+)
+
+final_mars_1_3
+
+final_mars_1_3 %>%
+  set_engine("earth") %>%
+  fit(auc ~ .,
+      data = juice(auc_prep_recipe_1_3)
+  ) %>%
+  vip(geom = "col")
+
+
+#finalize workflow
+final_wf_mars_1_3 <- workflow() %>%
+  add_recipe(auc_rec_1_3) %>%
+  add_model(final_mars_1_3)
+
+###resample#####
+set.seed(456)
+folds_1_3 <- vfold_cv(auc_train_train_1_3)#par défaut 10 fois
+set.seed(123)
+mars_rs_1_3 <- fit_resamples(object = final_wf_mars_1_3, resamples = folds_1_3, control = control_resamples(verbose=T, save_pred = T))
+
+##perf resample
+mars_rs_1_3 %>% collect_metrics()
+
+#perfs
+pred_obs_mars_1_3<- mars_rs_1_3 %>% collect_predictions() %>%
+   mutate (bias_rel = (.pred - auc)/auc,
+          bias_rel_square = bias_rel * bias_rel)
+
+mean(pred_obs_mars_1_3$bias_rel)
+
+sqrt(mean(pred_obs_mars_1_3$bias_rel_square))
+
+mars_rs_1_3 %>%
+  collect_predictions() %>%
+  ggplot(mapping = aes(x = .pred, y = auc)) + 
+  geom_point() +
+  geom_smooth(method=lm) 
+
+
+rmarkdown::paged_table(as.data.frame(pred_obs_mars_1_3 %>% summarise(biais_rel = mean(bias_rel), relative_rmse = sqrt(mean(bias_rel_square)),biais_out_20percent = mean(!between(bias_rel,-0.2, 0.2)), nb_out_20percent = sum(!between(bias_rel,-0.2, 0.2)),biais_out_10percent = mean(!between(bias_rel,-0.1, 0.1)), nb_out_10percent = sum(!between(bias_rel,-0.1, 0.1)), n= n())))
+
+final_wf_mars_1_3 <- workflow() %>%
+  add_recipe(auc_rec_1_3) %>%
+  add_model(final_mars_1_3) %>% 
+  fit(auc_train_test_1_3)
+
+predict_1_3=predict(final_wf_mars_1_3,auc_train_test_1_3)%>%
+     bind_cols(auc=auc_train_test_1_3$auc) %>%
+  mutate (bias_rel = (.pred - auc)/auc,
+          bias_rel_square = bias_rel * bias_rel)
+
+rmarkdown::paged_table(as.data.frame(predict_1_3 %>% summarise(biais_rel = mean(bias_rel), relative_rmse = sqrt(mean(bias_rel_square)),biais_out_20percent = mean(!between(bias_rel,-0.2, 0.2)), nb_out_20percent = sum(!between(bias_rel,-0.2, 0.2)),biais_out_10percent = mean(!between(bias_rel,-0.1, 0.1)), nb_out_10percent = sum(!between(bias_rel,-0.1, 0.1)), n= n())))
+
+
+### random forrest
+
+# #model
+
+
+rf_spec <- rand_forest(mode = "regression",
+                        mtry = tune(),
+                        trees = 1000,
+                        min_n = tune()
+                       ) %>% set_engine("ranger", importance = "permutation")
+
+
+
+#workflow model+recipe
+rf_wf <- workflow() %>%
+  add_recipe(auc_rec_1_3) %>%
+  add_model(rf_spec)
+#
+##hyperparameters
+set.seed(2345)
+folds_1_3 <- vfold_cv(auc_train_train_1_3)#par défaut 10 fois
+
+#tuning
+library(ranger)
+set.seed(345)
+tune_rf <- tune_grid(
+  rf_wf,
+  resamples = folds_1_3,
+  grid = 30
+)
+
+#visualisatin resultats
+
+autoplot(tune_rf) + 
+  ggtitle("tuning hyperparameter")
+
+#choix du best model
+best_rf_1_3 <- select_best(tune_rf)
+
+final_rf_1_3 <- finalize_model(
+  rf_spec,
+  best_rf_1_3
+)
+
+final_rf_1_3
+
+#finalize workflow
+final_wf_rf_1_3 <- workflow() %>%
+  add_recipe(auc_rec_1_3) %>%
+  add_model(final_rf_1_3)
+
+###resample#####
+set.seed(456)
+folds_cv <- vfold_cv(auc_train_train_1_3)#par défaut 10 fois
+
+## 10 fold CV
+rf_rs_1_3<- fit_resamples(object = final_wf_rf_1_3, resamples = folds_cv, control = control_resamples(verbose=T, save_pred = T))
+
+##perf resample
+rf_rs_1_3 %>% collect_metrics()
+
+
+#perfs
+pred_obs_rf_1_3 <- rf_rs_1_3 %>% collect_predictions() %>%
+   mutate (bias_rel = (.pred - auc)/auc,
+          bias_rel_square = bias_rel * bias_rel)
+
+
+
+
+rmarkdown::paged_table(as.data.frame(pred_obs_rf_1_3 %>% summarise(biais_rel = mean(bias_rel), relative_rmse = sqrt(mean(bias_rel_square)),biais_out_20percent = mean(!between(bias_rel,-0.2, 0.2)), nb_out_20percent = sum(!between(bias_rel,-0.2, 0.2)),biais_out_10percent = mean(!between(bias_rel,-0.1, 0.1)), nb_out_10percent = sum(!between(bias_rel,-0.1, 0.1)), n= n())))
+
+final_wf_rf_1_3 <- workflow() %>%
+  add_recipe(auc_rec_1_3) %>%
+  add_model(final_rf_1_3) %>% 
+  fit(auc_train_train_1_3)
+
+predict_1_3_rf=predict(final_wf_rf_1_3,auc_train_test_1_3)%>%
+     bind_cols(auc=auc_train_test_1_3$auc) %>%
+  mutate (bias_rel = (.pred - auc)/auc,
+          bias_rel_square = bias_rel * bias_rel)
+
+rmarkdown::paged_table(as.data.frame(predict_1_3_rf %>% summarise(biais_rel = mean(bias_rel), relative_rmse = sqrt(mean(bias_rel_square)),biais_out_20percent = mean(!between(bias_rel,-0.2, 0.2)), nb_out_20percent = sum(!between(bias_rel,-0.2, 0.2)),biais_out_10percent = mean(!between(bias_rel,-0.1, 0.1)), nb_out_10percent = sum(!between(bias_rel,-0.1, 0.1)), n= n())))
+
+
+#### SVM model
+
+svm_spec <- svm_linear() %>%
+  set_mode("regression") %>%
+  set_engine("LiblineaR")
+
+svm_wf <- workflow() %>%
+  add_recipe(auc_rec_1_3)
+
+library(LiblineaR)
+
+svm_fit <- svm_wf %>%
+  add_model(svm_spec) %>%
+  fit(data = auc_train_train_1_3)
+
+set.seed(123)
+
+svm_folds_1_3 <- vfold_cv(auc_train_train_1_3)
+
+svm_folds_1_3
+
+set.seed(123)
+
+svm_rs_1_3 <- fit_resamples(
+  svm_wf %>% add_model(svm_spec),
+  svm_folds_1_3,
+  control = control_resamples(save_pred = TRUE)
+)
+
+collect_metrics(svm_rs_1_3)
+
+
+#perfs
+pred_obs_SVM_1_3 <- svm_rs_1_3 %>% collect_predictions() %>%
+   mutate (bias_rel = (.pred - auc)/auc,
+          bias_rel_square = bias_rel * bias_rel)
+
+
+
+
+rmarkdown::paged_table(as.data.frame(pred_obs_SVM_1_3 %>% summarise(biais_rel = mean(bias_rel), relative_rmse = sqrt(mean(bias_rel_square)),biais_out_20percent = mean(!between(bias_rel,-0.2, 0.2)), nb_out_20percent = sum(!between(bias_rel,-0.2, 0.2)),biais_out_10percent = mean(!between(bias_rel,-0.1, 0.1)), nb_out_10percent = sum(!between(bias_rel,-0.1, 0.1)), n= n())))
+
+pred_obs_SVM_1_3<- workflow() %>%
+  add_recipe(auc_rec_1_3) %>%
+  add_model(svm_spec) %>% 
+  fit(auc_train_train_1_3)
+
+predict_1_3_svm=predict(pred_obs_SVM_1_3,auc_train_test_1_3)%>%
+     bind_cols(auc=auc_train_test_1_3$auc) %>%
+  mutate (bias_rel = (.pred - auc)/auc,
+          bias_rel_square = bias_rel * bias_rel)
+
+rmarkdown::paged_table(as.data.frame(predict_1_3_svm %>% summarise(biais_rel = mean(bias_rel), relative_rmse = sqrt(mean(bias_rel_square)),biais_out_20percent = mean(!between(bias_rel,-0.2, 0.2)), nb_out_20percent = sum(!between(bias_rel,-0.2, 0.2)),biais_out_10percent = mean(!between(bias_rel,-0.1, 0.1)), nb_out_10percent = sum(!between(bias_rel,-0.1, 0.1)), n= n())))
+```
+times 2/4
+
+```{r}
+auc_2_4 <- auc_1 %>% select(Pds,Clcreat,age,taille,SEX,SC_mosteller,greffe,amt,out_2,out_4,auc)
+
+
+set.seed(123)
+
+splits <- initial_split(auc_2_4, strata = auc)
+auc_train_2_4  <- training(splits)
+auc_test_2_4   <- testing(splits)
+
+set.seed(234)
+auc_set_2_4  <- validation_split(auc_train_2_4, 
+                            strata = auc, 
+                            prop = 0.80)
+
+auc_train_train_2_4<- analysis(auc_set_2_4$splits[[1]])
+auc_train_test_2_4<-assessment(auc_set_2_4$splits[[1]])
+
+auc_rec_2_4 <- recipe(auc ~ ., data = auc_train_train_2_4) %>%
+  step_normalize(all_numeric(), -all_outcomes()) %>%
+  step_dummy(greffe,SEX,one_hot=T) 
+
+auc_prep_recipe_2_4 <-  prep(auc_rec_2_4)
+auc_train_recipe_2_4 <-juice(auc_prep_recipe_2_4)
+summary(auc_train_recipe_2_4)
+
+
+### glmnet
+glmnet_spec <- linear_reg(penalty=tune(),mixture = 1) %>%
+  set_engine("glmnet") %>%
+  set_mode("regression")
+
+#workflow model+recipe
+glmnet_wf_2_4 <- workflow() %>%
+  add_recipe(auc_rec_2_4) %>%
+  add_model(glmnet_spec)
+
+
+##hyperparameters
+set.seed(2345)
+auc_folds_2_4 <- vfold_cv(auc_train_train_2_4, v=10)#par défaut 10 fois
+
+#tuning
+set.seed(345)
+tune_glmnet_2_4 <- tune_grid(
+  glmnet_wf_2_4,
+  resamples = auc_folds_2_4,
+  grid = 30)
+
+
+tune_glmnet_2_4%>% collect_metrics()
+
+best_rmse_glmnet_2_4 <- select_best(tune_glmnet_2_4)
+final_glmnet_2_4 <- finalize_model(
+  glmnet_spec,
+  best_rmse_glmnet_2_4
+)
+
+final_glmnet_2_4
+
+
+library(vip)
+
+#finalize workflow
+final_wf_glmnet_2_4<- workflow() %>%
+  add_recipe(auc_rec_2_4) %>%
+  add_model(final_glmnet_2_4)
+
+###resample#####
+set.seed(456)
+folds_2_4 <- vfold_cv(auc_train_train_2_4)#par défaut 10 fois
+set.seed(123)
+glmnet_rs_2_4 <- fit_resamples(object = final_wf_glmnet_2_4, resamples = folds_2_4, control = control_resamples(verbose=T, save_pred = T))
+
+##perf resample
+glmnet_rs_2_4 %>% collect_metrics()
+
+pred_obs_glmnet_2_4 <- glmnet_rs_2_4 %>% collect_predictions() %>%
+   mutate (bias_rel = (.pred - auc)/auc,
+          bias_rel_square = bias_rel * bias_rel)
+
+
+#perfs
+mean(pred_obs_glmnet_2_4$bias_rel)
+sqrt(mean(pred_obs_glmnet_2_4$bias_rel_square))
+
+glmnet_rs_2_4 %>%
+  collect_predictions() %>%
+  ggplot(mapping = aes(x = .pred, y = auc)) + 
+  geom_point() +
+  geom_smooth(method=lm) 
+
+rmarkdown::paged_table(as.data.frame(pred_obs_glmnet_2_4%>% summarise(biais_rel = mean(bias_rel), relative_rmse = sqrt(mean(bias_rel_square)),biais_out_20percent = mean(!between(bias_rel,-0.2, 0.2)), nb_out_20percent = sum(!between(bias_rel,-0.2, 0.2)),biais_out_10percent = mean(!between(bias_rel,-0.1, 0.1)), nb_out_10percent = sum(!between(bias_rel,-0.1, 0.1)), n= n())))
+
+final_wf_glmnet_2_4 <- workflow() %>%
+  add_recipe(auc_rec_2_4) %>%
+  add_model(final_glmnet_2_4) %>% 
+  fit(auc_train_test_2_4)
+
+predict_2_4=predict(final_wf_glmnet_2_4,auc_train_test_2_4)%>%
+     bind_cols(auc=auc_train_test_2_4$auc) %>%
+  mutate (bias_rel = (.pred - auc)/auc,
+          bias_rel_square = bias_rel * bias_rel)
+
+rmarkdown::paged_table(as.data.frame(predict_2_4 %>% summarise(biais_rel = mean(bias_rel), relative_rmse = sqrt(mean(bias_rel_square)),biais_out_20percent = mean(!between(bias_rel,-0.2, 0.2)), nb_out_20percent = sum(!between(bias_rel,-0.2, 0.2)),biais_out_10percent = mean(!between(bias_rel,-0.1, 0.1)), nb_out_10percent = sum(!between(bias_rel,-0.1, 0.1)), n= n())))
+
+
+
+
+# xgboost
+
+ #model
+xgb_spec <- boost_tree(mode = "regression",
+                        mtry = tune(),
+                        trees = 1000,
+                        min_n = tune(),
+                        tree_depth = tune(),
+                        sample_size=tune(),
+                        learn_rate = tune()) %>% set_engine("xgboost")
+
+#workflow model+recipe
+xgb_wf_2_4<- workflow() %>%
+  add_recipe(auc_rec_2_4) %>%
+  add_model(xgb_spec)
+#
+##hyperparameters
+set.seed(2345)
+auc_folds_2_4 <- vfold_cv(auc_train_train_2_4)#par défaut 10 fois
+
+#tuning
+set.seed(345)
+tune_xgb <- tune_grid(
+  xgb_wf_2_4,
+  resamples = auc_folds_2_4,
+  grid = 30)
+
+
+#visualisatin resultats
+tune_xgb %>%
+  collect_metrics() %>%
+  filter(.metric == "rmse") %>%
+  dplyr::select(mean, min_n, mtry, learn_rate, tree_depth,sample_size) %>%
+  pivot_longer(min_n:tree_depth,
+               values_to = "value",
+               names_to = "parameter"
+  ) %>%
+  ggplot(aes(value, mean, color = parameter)) +
+  geom_point(show.legend = FALSE) +
+  facet_wrap(~parameter, scales = "free_x") +
+  labs(x = NULL, y = "RMSE")
+
+#choix du best model
+best_rmse_xgb_2_4 <- select_best(tune_xgb)
+
+final_xgb_2_4<- finalize_model(
+  xgb_spec,
+  best_rmse_xgb_2_4
+)
+
+final_xgb_2_4
+
+final_xgb_2_4 %>%
+  set_engine("xgboost", importance = "permutation") %>%
+  fit(auc ~ .,
+      data = juice(auc_prep_recipe_2_4)
+  ) %>%
+  vip::vip(geom = "col")
+
+#finalize workflow
+final_wf_xgb_2_4 <- workflow() %>%
+  add_recipe(auc_rec_2_4) %>%
+  add_model(final_xgb_2_4)%>%
+  fit(auc_train_train_2_4)
+
+###resample#####
+set.seed(456)
+folds_2_4 <- vfold_cv(auc_train_train_2_4)#par défaut 10 fois
+set.seed(123)
+xgb_rs_2_4 <- fit_resamples(object = final_wf_xgb_2_4, resamples = folds_2_4, control = control_resamples(verbose=T, save_pred = T))
+
+##perf resample
+xgb_rs_2_4 %>% collect_metrics()
+
+pred_obs_xgb_2_4 <- xgb_rs_2_4%>% collect_predictions() %>%
+   mutate (bias_rel = (.pred - auc)/auc,
+          bias_rel_square = bias_rel * bias_rel)
+
+
+#perfs
+mean(pred_obs_xgb_2_4$bias_rel)
+
+sqrt(mean(pred_obs_xgb_2_4$bias_rel_square))
+
+xgb_rs_2_4 %>%
+  collect_predictions() %>%
+  ggplot(mapping = aes(x = .pred, y = auc)) + 
+  geom_point() +
+  geom_smooth(method=lm) 
+
+rmarkdown::paged_table(as.data.frame(pred_obs_xgb_2_4 %>% summarise(biais_rel = mean(bias_rel), relative_rmse = sqrt(mean(bias_rel_square)),biais_out_20percent = mean(!between(bias_rel,-0.2, 0.2)), nb_out_20percent = sum(!between(bias_rel,-0.2, 0.2)),biais_out_10percent = mean(!between(bias_rel,-0.1, 0.1)), nb_out_10percent = sum(!between(bias_rel,-0.1, 0.1)), n= n())))
+
+final_wf_xgb_2_4 <- workflow() %>%
+  add_recipe(auc_rec_2_4) %>%
+  add_model(final_xgb_2_4) %>% 
+  fit(auc_train_test_2_4)
+
+predict_2_4=predict(final_wf_xgb_2_4,auc_train_test_2_4)%>%
+     bind_cols(auc=auc_train_test_2_4$auc) %>%
+  mutate (bias_rel = (.pred - auc)/auc,
+          bias_rel_square = bias_rel * bias_rel)
+
+rmarkdown::paged_table(as.data.frame(predict_2_4 %>% summarise(biais_rel = mean(bias_rel), relative_rmse = sqrt(mean(bias_rel_square)),biais_out_20percent = mean(!between(bias_rel,-0.2, 0.2)), nb_out_20percent = sum(!between(bias_rel,-0.2, 0.2)),biais_out_10percent = mean(!between(bias_rel,-0.1, 0.1)), nb_out_10percent = sum(!between(bias_rel,-0.1, 0.1)), n= n())))
+
+
+#### mars
+
+# workflow mars
+
+mars_spec <- mars(num_terms = tune(), prod_degree = tune()) %>%
+  set_engine("earth") %>%
+  set_mode("regression")
+
+#workflow model+recipe
+mars_wf_2_4 <- workflow() %>%
+  add_recipe(auc_rec_2_4) %>%
+  add_model(mars_spec)
+
+set.seed(345)
+#on reaffine grid
+mars_grid <- grid_regular(
+  num_terms(range = c(1L, 36L)),
+  prod_degree(range = c(1L, 2L)),
+  levels = 20
+)
+
+mars_grid
+
+
+
+##hyperparameters
+set.seed(2345)
+env_folds_2_4 <- vfold_cv(auc_train_train_2_4)#par défaut 10 fois
+
+
+#retune
+set.seed(456)
+library(earth)
+regular_res_2_4 <- tune_grid(
+ mars_wf_2_4,
+ resamples = env_folds_2_4,
+ grid = mars_grid)
+
+
+regular_res_2_4
+
+#visualisation
+regular_res_2_4 %>%
+  collect_metrics() %>%
+  filter(.metric == "rmse") %>%
+  mutate(prod_degree = factor(prod_degree)) %>%
+  ggplot(aes(num_terms, mean, color = prod_degree)) +
+  geom_line(alpha = 0.5, size = 1.5) +
+  geom_point() +
+  labs(y = "RMSE")
+
+#visualisation des résultats
+library(vip)
+#choix du best model
+best_rmse_mars_2_4 <- select_best(regular_res_2_4)
+
+final_mars_2_4 <- finalize_model(
+  mars_spec,
+  best_rmse_mars_2_4
+)
+
+final_mars_2_4
+
+final_mars_2_4 %>%
+  set_engine("earth") %>%
+  fit(auc ~ .,
+      data = juice(auc_prep_recipe_2_4)
+  ) %>%
+  vip(geom = "col")
+
+
+#finalize workflow
+final_wf_mars_2_4 <- workflow() %>%
+  add_recipe(auc_rec_2_4) %>%
+  add_model(final_mars_2_4)
+
+###resample#####
+set.seed(456)
+folds_2_4 <- vfold_cv(auc_train_train_2_4)#par défaut 10 fois
+set.seed(123)
+mars_rs_2_4 <- fit_resamples(object = final_wf_mars_2_4, resamples = folds_2_4, control = control_resamples(verbose=T, save_pred = T))
+
+##perf resample
+mars_rs_2_4 %>% collect_metrics()
+
+#perfs
+pred_obs_mars_2_4<- mars_rs_2_4%>% collect_predictions() %>%
+   mutate (bias_rel = (.pred - auc)/auc,
+          bias_rel_square = bias_rel * bias_rel)
+
+mean(pred_obs_mars_2_4$bias_rel)
+
+sqrt(mean(pred_obs_mars_2_4$bias_rel_square))
+
+mars_rs_2_4 %>%
+  collect_predictions() %>%
+  ggplot(mapping = aes(x = .pred, y = auc)) + 
+  geom_point() +
+  geom_smooth(method=lm) 
+
+
+rmarkdown::paged_table(as.data.frame(pred_obs_mars_2_4 %>% summarise(biais_rel = mean(bias_rel), relative_rmse = sqrt(mean(bias_rel_square)),biais_out_20percent = mean(!between(bias_rel,-0.2, 0.2)), nb_out_20percent = sum(!between(bias_rel,-0.2, 0.2)),biais_out_10percent = mean(!between(bias_rel,-0.1, 0.1)), nb_out_10percent = sum(!between(bias_rel,-0.1, 0.1)), n= n())))
+
+final_wf_mars_2_4 <- workflow() %>%
+  add_recipe(auc_rec_2_4) %>%
+  add_model(final_mars_2_4) %>% 
+  fit(auc_train_test_2_4)
+
+predict_2_4=predict(final_wf_mars_2_4,auc_train_test_2_4)%>%
+     bind_cols(auc=auc_train_test_2_4$auc) %>%
+  mutate (bias_rel = (.pred - auc)/auc,
+          bias_rel_square = bias_rel * bias_rel)
+
+rmarkdown::paged_table(as.data.frame(predict_2_4 %>% summarise(biais_rel = mean(bias_rel), relative_rmse = sqrt(mean(bias_rel_square)),biais_out_20percent = mean(!between(bias_rel,-0.2, 0.2)), nb_out_20percent = sum(!between(bias_rel,-0.2, 0.2)),biais_out_10percent = mean(!between(bias_rel,-0.1, 0.1)), nb_out_10percent = sum(!between(bias_rel,-0.1, 0.1)), n= n())))
+
+
+### random forrest
+
+# #model
+
+
+rf_spec <- rand_forest(mode = "regression",
+                        mtry = tune(),
+                        trees = 1000,
+                        min_n = tune()
+                       ) %>% set_engine("ranger", importance = "permutation")
+
+
+
+#workflow model+recipe
+rf_wf <- workflow() %>%
+  add_recipe(auc_rec_2_4) %>%
+  add_model(rf_spec)
+#
+##hyperparameters
+set.seed(2345)
+folds_2_4 <- vfold_cv(auc_train_train_2_4)#par défaut 10 fois
+
+#tuning
+library(ranger)
+set.seed(345)
+tune_rf <- tune_grid(
+  rf_wf,
+  resamples = folds_2_4,
+  grid = 30
+)
+
+#visualisatin resultats
+
+autoplot(tune_rf) + 
+  ggtitle("tuning hyperparameter")
+
+#choix du best model
+best_rf_2_4 <- select_best(tune_rf)
+
+final_rf_2_4 <- finalize_model(
+  rf_spec,
+  best_rf_2_4
+)
+
+final_rf_2_4
+
+#finalize workflow
+final_wf_rf_2_4 <- workflow() %>%
+  add_recipe(auc_rec_2_4) %>%
+  add_model(final_rf_2_4)
+
+###resample#####
+set.seed(456)
+folds_cv <- vfold_cv(auc_train_train_2_4)#par défaut 10 fois
+
+## 10 fold CV
+rf_rs_2_4<- fit_resamples(object = final_wf_rf_2_4, resamples = folds_cv, control = control_resamples(verbose=T, save_pred = T))
+
+##perf resample
+rf_rs_2_4 %>% collect_metrics()
+
+
+#perfs
+pred_obs_rf_2_4 <- rf_rs_2_4 %>% collect_predictions() %>%
+   mutate (bias_rel = (.pred - auc)/auc,
+          bias_rel_square = bias_rel * bias_rel)
+
+
+
+
+rmarkdown::paged_table(as.data.frame(pred_obs_rf_2_4 %>% summarise(biais_rel = mean(bias_rel), relative_rmse = sqrt(mean(bias_rel_square)),biais_out_20percent = mean(!between(bias_rel,-0.2, 0.2)), nb_out_20percent = sum(!between(bias_rel,-0.2, 0.2)),biais_out_10percent = mean(!between(bias_rel,-0.1, 0.1)), nb_out_10percent = sum(!between(bias_rel,-0.1, 0.1)), n= n())))
+
+final_wf_rf_2_4 <- workflow() %>%
+  add_recipe(auc_rec_2_4) %>%
+  add_model(final_rf_2_4) %>% 
+  fit(auc_train_train_2_4)
+
+predict_2_4_rf=predict(final_wf_rf_2_4,auc_train_test_2_4)%>%
+     bind_cols(auc=auc_train_test_2_4$auc) %>%
+  mutate (bias_rel = (.pred - auc)/auc,
+          bias_rel_square = bias_rel * bias_rel)
+
+rmarkdown::paged_table(as.data.frame(predict_2_4_rf %>% summarise(biais_rel = mean(bias_rel), relative_rmse = sqrt(mean(bias_rel_square)),biais_out_20percent = mean(!between(bias_rel,-0.2, 0.2)), nb_out_20percent = sum(!between(bias_rel,-0.2, 0.2)),biais_out_10percent = mean(!between(bias_rel,-0.1, 0.1)), nb_out_10percent = sum(!between(bias_rel,-0.1, 0.1)), n= n())))
+
+
+#### SVM model
+
+svm_spec <- svm_linear() %>%
+  set_mode("regression") %>%
+  set_engine("LiblineaR")
+
+svm_wf <- workflow() %>%
+  add_recipe(auc_rec_2_4)
+
+library(LiblineaR)
+
+svm_fit <- svm_wf %>%
+  add_model(svm_spec) %>%
+  fit(data = auc_train_train_2_4)
+
+set.seed(123)
+
+svm_folds_2_4 <- vfold_cv(auc_train_train_2_4)
+
+svm_folds_2_4
+
+set.seed(123)
+
+svm_rs_2_4 <- fit_resamples(
+  svm_wf %>% add_model(svm_spec),
+  svm_folds_2_4,
+  control = control_resamples(save_pred = TRUE)
+)
+
+collect_metrics(svm_rs_2_4)
+
+
+#perfs
+pred_obs_SVM_2_4 <- svm_rs_2_4 %>% collect_predictions() %>%
+   mutate (bias_rel = (.pred - auc)/auc,
+          bias_rel_square = bias_rel * bias_rel)
+
+
+
+
+rmarkdown::paged_table(as.data.frame(pred_obs_SVM_2_4 %>% summarise(biais_rel = mean(bias_rel), relative_rmse = sqrt(mean(bias_rel_square)),biais_out_20percent = mean(!between(bias_rel,-0.2, 0.2)), nb_out_20percent = sum(!between(bias_rel,-0.2, 0.2)),biais_out_10percent = mean(!between(bias_rel,-0.1, 0.1)), nb_out_10percent = sum(!between(bias_rel,-0.1, 0.1)), n= n())))
+
+pred_obs_SVM_2_4<- workflow() %>%
+  add_recipe(auc_rec_2_4) %>%
+  add_model(svm_spec) %>% 
+  fit(auc_train_train_2_4)
+
+predict_2_4_svm=predict(pred_obs_SVM_2_4,auc_train_test_2_4)%>%
+     bind_cols(auc=auc_train_test_2_4$auc) %>%
+  mutate (bias_rel = (.pred - auc)/auc,
+          bias_rel_square = bias_rel * bias_rel)
+
+rmarkdown::paged_table(as.data.frame(predict_2_4_svm %>% summarise(biais_rel = mean(bias_rel), relative_rmse = sqrt(mean(bias_rel_square)),biais_out_20percent = mean(!between(bias_rel,-0.2, 0.2)), nb_out_20percent = sum(!between(bias_rel,-0.2, 0.2)),biais_out_10percent = mean(!between(bias_rel,-0.1, 0.1)), nb_out_10percent = sum(!between(bias_rel,-0.1, 0.1)), n= n())))
+
+```
+
+times le 1/4
+
+```{r}
+auc_1_4 <- auc_1 %>% select(Pds,Clcreat,age,taille,SEX,SC_mosteller,greffe,amt,out_1,out_4,auc)
+
+
+set.seed(123)
+
+splits <- initial_split(auc_1_4, strata = auc)
+auc_train_1_4  <- training(splits)
+auc_test_1_4   <- testing(splits)
+
+set.seed(234)
+auc_set_1_4  <- validation_split(auc_train_1_4, 
+                            strata = auc, 
+                            prop = 0.80)
+
+auc_train_train_1_4<- analysis(auc_set_1_4$splits[[1]])
+auc_train_test_1_4<-assessment(auc_set_1_4$splits[[1]])
+
+auc_rec_1_4 <- recipe(auc ~ ., data = auc_train_train_1_4) %>%
+  step_normalize(all_numeric(), -all_outcomes()) %>%
+  step_dummy(greffe,SEX,one_hot=T) 
+
+auc_prep_recipe_1_4 <-  prep(auc_rec_1_4)
+auc_train_recipe_1_4 <-juice(auc_prep_recipe_1_4)
+summary(auc_train_recipe_1_4)
+
+
+### glmnet
+glmnet_spec <- linear_reg(penalty=tune(),mixture = 1) %>%
+  set_engine("glmnet") %>%
+  set_mode("regression")
+
+#workflow model+recipe
+glmnet_wf_1_4 <- workflow() %>%
+  add_recipe(auc_rec_1_4) %>%
+  add_model(glmnet_spec)
+
+
+##hyperparameters
+set.seed(2345)
+auc_folds_1_4 <- vfold_cv(auc_train_train_1_4, v=10)#par défaut 10 fois
+
+#tuning
+set.seed(345)
+tune_glmnet_1_4 <- tune_grid(
+  glmnet_wf_1_4,
+  resamples = auc_folds_1_4,
+  grid = 30)
+
+
+tune_glmnet_1_4%>% collect_metrics()
+
+best_rmse_glmnet_1_4 <- select_best(tune_glmnet_1_4)
+final_glmnet_1_4 <- finalize_model(
+  glmnet_spec,
+  best_rmse_glmnet_1_4
+)
+
+final_glmnet_1_4
+
+
+library(vip)
+
+#finalize workflow
+final_wf_glmnet_1_4<- workflow() %>%
+  add_recipe(auc_rec_1_4) %>%
+  add_model(final_glmnet_1_4)
+
+###resample#####
+set.seed(456)
+folds_1_4 <- vfold_cv(auc_train_train_1_4)#par défaut 10 fois
+set.seed(123)
+glmnet_rs_1_4 <- fit_resamples(object = final_wf_glmnet_1_4, resamples = folds_1_4, control = control_resamples(verbose=T, save_pred = T))
+
+##perf resample
+glmnet_rs_1_4 %>% collect_metrics()
+
+pred_obs_glmnet_1_4 <- glmnet_rs_1_4 %>% collect_predictions() %>%
+   mutate (bias_rel = (.pred - auc)/auc,
+          bias_rel_square = bias_rel * bias_rel)
+
+
+#perfs
+mean(pred_obs_glmnet_1_4$bias_rel)
+sqrt(mean(pred_obs_glmnet_1_4$bias_rel_square))
+
+glmnet_rs_1_4 %>%
+  collect_predictions() %>%
+  ggplot(mapping = aes(x = .pred, y = auc)) + 
+  geom_point() +
+  geom_smooth(method=lm) 
+
+rmarkdown::paged_table(as.data.frame(pred_obs_glmnet_1_4%>% summarise(biais_rel = mean(bias_rel), relative_rmse = sqrt(mean(bias_rel_square)),biais_out_20percent = mean(!between(bias_rel,-0.2, 0.2)), nb_out_20percent = sum(!between(bias_rel,-0.2, 0.2)),biais_out_10percent = mean(!between(bias_rel,-0.1, 0.1)), nb_out_10percent = sum(!between(bias_rel,-0.1, 0.1)), n= n())))
+
+final_wf_glmnet_1_4 <- workflow() %>%
+  add_recipe(auc_rec_1_4) %>%
+  add_model(final_glmnet_1_4) %>% 
+  fit(auc_train_test_1_4)
+
+predict_1_4=predict(final_wf_glmnet_1_4,auc_train_test_1_4)%>%
+     bind_cols(auc=auc_train_test_1_4$auc) %>%
+  mutate (bias_rel = (.pred - auc)/auc,
+          bias_rel_square = bias_rel * bias_rel)
+
+rmarkdown::paged_table(as.data.frame(predict_1_4 %>% summarise(biais_rel = mean(bias_rel), relative_rmse = sqrt(mean(bias_rel_square)),biais_out_20percent = mean(!between(bias_rel,-0.2, 0.2)), nb_out_20percent = sum(!between(bias_rel,-0.2, 0.2)),biais_out_10percent = mean(!between(bias_rel,-0.1, 0.1)), nb_out_10percent = sum(!between(bias_rel,-0.1, 0.1)), n= n())))
+
+
+# xgboost
+
+ #model
+xgb_spec <- boost_tree(mode = "regression",
+                        mtry = tune(),
+                        trees = 1000,
+                        min_n = tune(),
+                        tree_depth = tune(),
+                        sample_size=tune(),
+                        learn_rate = tune()) %>% set_engine("xgboost")
+
+#workflow model+recipe
+xgb_wf_1_4<- workflow() %>%
+  add_recipe(auc_rec_1_4) %>%
+  add_model(xgb_spec)
+#
+##hyperparameters
+set.seed(2345)
+auc_folds_1_4 <- vfold_cv(auc_train_train_1_4)#par défaut 10 fois
+
+#tuning
+set.seed(345)
+tune_xgb <- tune_grid(
+  xgb_wf_1_4,
+  resamples = auc_folds_1_4,
+  grid = 30)
+
+
+#visualisatin resultats
+tune_xgb %>%
+  collect_metrics() %>%
+  filter(.metric == "rmse") %>%
+  dplyr::select(mean, min_n, mtry, learn_rate, tree_depth,sample_size) %>%
+  pivot_longer(min_n:tree_depth,
+               values_to = "value",
+               names_to = "parameter"
+  ) %>%
+  ggplot(aes(value, mean, color = parameter)) +
+  geom_point(show.legend = FALSE) +
+  facet_wrap(~parameter, scales = "free_x") +
+  labs(x = NULL, y = "RMSE")
+
+#choix du best model
+best_rmse_xgb_1_4 <- select_best(tune_xgb)
+
+final_xgb_1_4<- finalize_model(
+  xgb_spec,
+  best_rmse_xgb_1_4
+)
+
+final_xgb_1_4
+
+final_xgb_1_4 %>%
+  set_engine("xgboost", importance = "permutation") %>%
+  fit(auc ~ .,
+      data = juice(auc_prep_recipe_1_4)
+  ) %>%
+  vip::vip(geom = "col")
+
+#finalize workflow
+final_wf_xgb_1_4 <- workflow() %>%
+  add_recipe(auc_rec_1_4) %>%
+  add_model(final_xgb_1_4)%>%
+  fit(auc_train_train_1_4)
+
+###resample#####
+set.seed(456)
+folds_1_4 <- vfold_cv(auc_train_train_1_4)#par défaut 10 fois
+set.seed(123)
+xgb_rs_1_4 <- fit_resamples(object = final_wf_xgb_1_4, resamples = folds_1_4, control = control_resamples(verbose=T, save_pred = T))
+
+##perf resample
+xgb_rs_1_4 %>% collect_metrics()
+
+pred_obs_xgb_1_4 <- xgb_rs_1_4%>% collect_predictions() %>%
+   mutate (bias_rel = (.pred - auc)/auc,
+          bias_rel_square = bias_rel * bias_rel)
+
+
+#perfs
+mean(pred_obs_xgb_1_4$bias_rel)
+
+sqrt(mean(pred_obs_xgb_1_4$bias_rel_square))
+
+xgb_rs_1_4 %>%
+  collect_predictions() %>%
+  ggplot(mapping = aes(x = .pred, y = auc)) + 
+  geom_point() +
+  geom_smooth(method=lm) 
+
+rmarkdown::paged_table(as.data.frame(pred_obs_xgb_1_4 %>% summarise(biais_rel = mean(bias_rel), relative_rmse = sqrt(mean(bias_rel_square)),biais_out_20percent = mean(!between(bias_rel,-0.2, 0.2)), nb_out_20percent = sum(!between(bias_rel,-0.2, 0.2)),biais_out_10percent = mean(!between(bias_rel,-0.1, 0.1)), nb_out_10percent = sum(!between(bias_rel,-0.1, 0.1)), n= n())))
+
+final_wf_xgb_1_4 <- workflow() %>%
+  add_recipe(auc_rec_1_4) %>%
+  add_model(final_xgb_1_4) %>% 
+  fit(auc_train_test_1_4)
+
+predict_1_4=predict(final_wf_xgb_1_4,auc_train_test_1_4)%>%
+     bind_cols(auc=auc_train_test_1_4$auc) %>%
+  mutate (bias_rel = (.pred - auc)/auc,
+          bias_rel_square = bias_rel * bias_rel)
+
+rmarkdown::paged_table(as.data.frame(predict_1_4 %>% summarise(biais_rel = mean(bias_rel), relative_rmse = sqrt(mean(bias_rel_square)),biais_out_20percent = mean(!between(bias_rel,-0.2, 0.2)), nb_out_20percent = sum(!between(bias_rel,-0.2, 0.2)),biais_out_10percent = mean(!between(bias_rel,-0.1, 0.1)), nb_out_10percent = sum(!between(bias_rel,-0.1, 0.1)), n= n())))
+
+#### mars
+
+# workflow mars
+
+mars_spec <- mars(num_terms = tune(), prod_degree = tune()) %>%
+  set_engine("earth") %>%
+  set_mode("regression")
+
+#workflow model+recipe
+mars_wf_1_4 <- workflow() %>%
+  add_recipe(auc_rec_1_4) %>%
+  add_model(mars_spec)
+
+set.seed(345)
+#on reaffine grid
+mars_grid <- grid_regular(
+  num_terms(range = c(1L, 36L)),
+  prod_degree(range = c(1L, 2L)),
+  levels = 20
+)
+
+mars_grid
+
+
+
+##hyperparameters
+set.seed(2345)
+env_folds_1_4 <- vfold_cv(auc_train_train_1_4)#par défaut 10 fois
+
+
+#retune
+set.seed(456)
+library(earth)
+regular_res_1_4 <- tune_grid(
+ mars_wf_1_4,
+ resamples = env_folds_1_4,
+ grid = mars_grid)
+
+
+regular_res_1_4
+
+#visualisation
+regular_res_1_4 %>%
+  collect_metrics() %>%
+  filter(.metric == "rmse") %>%
+  mutate(prod_degree = factor(prod_degree)) %>%
+  ggplot(aes(num_terms, mean, color = prod_degree)) +
+  geom_line(alpha = 0.5, size = 1.5) +
+  geom_point() +
+  labs(y = "RMSE")
+
+#visualisation des résultats
+library(vip)
+#choix du best model
+best_rmse_mars_1_4 <- select_best(regular_res_1_4)
+
+final_mars_1_4 <- finalize_model(
+  mars_spec,
+  best_rmse_mars_1_4
+)
+
+final_mars_1_4
+
+final_mars_1_4 %>%
+  set_engine("earth") %>%
+  fit(auc ~ .,
+      data = juice(auc_prep_recipe_1_4)
+  ) %>%
+  vip(geom = "col")
+
+
+#finalize workflow
+final_wf_mars_1_4 <- workflow() %>%
+  add_recipe(auc_rec_1_4) %>%
+  add_model(final_mars_1_4)
+
+###resample#####
+set.seed(456)
+folds_1_4 <- vfold_cv(auc_train_train_1_4)#par défaut 10 fois
+set.seed(123)
+mars_rs_1_4 <- fit_resamples(object = final_wf_mars_1_4, resamples = folds_1_4, control = control_resamples(verbose=T, save_pred = T))
+
+##perf resample
+mars_rs_1_4 %>% collect_metrics()
+
+#perfs
+pred_obs_mars_1_4<- mars_rs_1_4%>% collect_predictions() %>%
+   mutate (bias_rel = (.pred - auc)/auc,
+          bias_rel_square = bias_rel * bias_rel)
+
+mean(pred_obs_mars_1_4$bias_rel)
+
+sqrt(mean(pred_obs_mars_1_4$bias_rel_square))
+
+mars_rs_1_4 %>%
+  collect_predictions() %>%
+  ggplot(mapping = aes(x = .pred, y = auc)) + 
+  geom_point() +
+  geom_smooth(method=lm) 
+
+
+rmarkdown::paged_table(as.data.frame(pred_obs_mars_1_4 %>% summarise(biais_rel = mean(bias_rel), relative_rmse = sqrt(mean(bias_rel_square)),biais_out_20percent = mean(!between(bias_rel,-0.2, 0.2)), nb_out_20percent = sum(!between(bias_rel,-0.2, 0.2)),biais_out_10percent = mean(!between(bias_rel,-0.1, 0.1)), nb_out_10percent = sum(!between(bias_rel,-0.1, 0.1)), n= n())))
+
+final_wf_mars_1_4 <- workflow() %>%
+  add_recipe(auc_rec_1_4) %>%
+  add_model(final_mars_1_4) %>% 
+  fit(auc_train_test_1_4)
+
+predict_1_4=predict(final_wf_mars_1_4,auc_train_test_1_4)%>%
+     bind_cols(auc=auc_train_test_1_4$auc) %>%
+  mutate (bias_rel = (.pred - auc)/auc,
+          bias_rel_square = bias_rel * bias_rel)
+
+rmarkdown::paged_table(as.data.frame(predict_1_4 %>% summarise(biais_rel = mean(bias_rel), relative_rmse = sqrt(mean(bias_rel_square)),biais_out_20percent = mean(!between(bias_rel,-0.2, 0.2)), nb_out_20percent = sum(!between(bias_rel,-0.2, 0.2)),biais_out_10percent = mean(!between(bias_rel,-0.1, 0.1)), nb_out_10percent = sum(!between(bias_rel,-0.1, 0.1)), n= n())))
+
+
+### random forrest
+
+# #model
+
+
+rf_spec <- rand_forest(mode = "regression",
+                        mtry = tune(),
+                        trees = 1000,
+                        min_n = tune()
+                       ) %>% set_engine("ranger", importance = "permutation")
+
+
+
+#workflow model+recipe
+rf_wf <- workflow() %>%
+  add_recipe(auc_rec_1_4) %>%
+  add_model(rf_spec)
+#
+##hyperparameters
+set.seed(2345)
+folds_1_4 <- vfold_cv(auc_train_train_1_4)#par défaut 10 fois
+
+#tuning
+library(ranger)
+set.seed(345)
+tune_rf <- tune_grid(
+  rf_wf,
+  resamples = folds_1_4,
+  grid = 30
+)
+
+#visualisatin resultats
+
+autoplot(tune_rf) + 
+  ggtitle("tuning hyperparameter")
+
+#choix du best model
+best_rf_1_4 <- select_best(tune_rf)
+
+final_rf_1_4 <- finalize_model(
+  rf_spec,
+  best_rf_1_4
+)
+
+final_rf_1_4
+
+#finalize workflow
+final_wf_rf_1_4 <- workflow() %>%
+  add_recipe(auc_rec_1_4) %>%
+  add_model(final_rf_1_4)
+
+###resample#####
+set.seed(456)
+folds_cv <- vfold_cv(auc_train_train_1_4)#par défaut 10 fois
+
+## 10 fold CV
+rf_rs_1_4<- fit_resamples(object = final_wf_rf_1_4, resamples = folds_cv, control = control_resamples(verbose=T, save_pred = T))
+
+##perf resample
+rf_rs_1_4 %>% collect_metrics()
+
+
+#perfs
+pred_obs_rf_1_4 <- rf_rs_1_4 %>% collect_predictions() %>%
+   mutate (bias_rel = (.pred - auc)/auc,
+          bias_rel_square = bias_rel * bias_rel)
+
+
+
+
+rmarkdown::paged_table(as.data.frame(pred_obs_rf_1_4 %>% summarise(biais_rel = mean(bias_rel), relative_rmse = sqrt(mean(bias_rel_square)),biais_out_20percent = mean(!between(bias_rel,-0.2, 0.2)), nb_out_20percent = sum(!between(bias_rel,-0.2, 0.2)),biais_out_10percent = mean(!between(bias_rel,-0.1, 0.1)), nb_out_10percent = sum(!between(bias_rel,-0.1, 0.1)), n= n())))
+
+final_wf_rf_1_4 <- workflow() %>%
+  add_recipe(auc_rec_1_4) %>%
+  add_model(final_rf_1_4) %>% 
+  fit(auc_train_train_1_4)
+
+predict_1_4_rf=predict(final_wf_rf_1_4,auc_train_test_1_4)%>%
+     bind_cols(auc=auc_train_test_1_4$auc) %>%
+  mutate (bias_rel = (.pred - auc)/auc,
+          bias_rel_square = bias_rel * bias_rel)
+
+rmarkdown::paged_table(as.data.frame(predict_1_4_rf %>% summarise(biais_rel = mean(bias_rel), relative_rmse = sqrt(mean(bias_rel_square)),biais_out_20percent = mean(!between(bias_rel,-0.2, 0.2)), nb_out_20percent = sum(!between(bias_rel,-0.2, 0.2)),biais_out_10percent = mean(!between(bias_rel,-0.1, 0.1)), nb_out_10percent = sum(!between(bias_rel,-0.1, 0.1)), n= n())))
+
+
+#### SVM model
+
+svm_spec <- svm_linear() %>%
+  set_mode("regression") %>%
+  set_engine("LiblineaR")
+
+svm_wf <- workflow() %>%
+  add_recipe(auc_rec_1_4)
+
+library(LiblineaR)
+
+svm_fit <- svm_wf %>%
+  add_model(svm_spec) %>%
+  fit(data = auc_train_train_1_4)
+
+set.seed(123)
+
+svm_folds_1_4 <- vfold_cv(auc_train_train_1_4)
+
+svm_folds_1_4
+
+set.seed(123)
+
+svm_rs_1_4 <- fit_resamples(
+  svm_wf %>% add_model(svm_spec),
+  svm_folds_1_4,
+  control = control_resamples(save_pred = TRUE)
+)
+
+collect_metrics(svm_rs_1_4)
+
+
+#perfs
+pred_obs_SVM_1_4 <- svm_rs_1_4 %>% collect_predictions() %>%
+   mutate (bias_rel = (.pred - auc)/auc,
+          bias_rel_square = bias_rel * bias_rel)
+
+
+
+
+rmarkdown::paged_table(as.data.frame(pred_obs_SVM_1_4 %>% summarise(biais_rel = mean(bias_rel), relative_rmse = sqrt(mean(bias_rel_square)),biais_out_20percent = mean(!between(bias_rel,-0.2, 0.2)), nb_out_20percent = sum(!between(bias_rel,-0.2, 0.2)),biais_out_10percent = mean(!between(bias_rel,-0.1, 0.1)), nb_out_10percent = sum(!between(bias_rel,-0.1, 0.1)), n= n())))
+
+pred_obs_SVM_1_4<- workflow() %>%
+  add_recipe(auc_rec_1_4) %>%
+  add_model(svm_spec) %>% 
+  fit(auc_train_train_1_4)
+
+predict_1_4_svm=predict(pred_obs_SVM_1_4,auc_train_test_1_4)%>%
+     bind_cols(auc=auc_train_test_1_4$auc) %>%
+  mutate (bias_rel = (.pred - auc)/auc,
+          bias_rel_square = bias_rel * bias_rel)
+
+rmarkdown::paged_table(as.data.frame(predict_1_4_svm %>% summarise(biais_rel = mean(bias_rel), relative_rmse = sqrt(mean(bias_rel_square)),biais_out_20percent = mean(!between(bias_rel,-0.2, 0.2)), nb_out_20percent = sum(!between(bias_rel,-0.2, 0.2)),biais_out_10percent = mean(!between(bias_rel,-0.1, 0.1)), nb_out_10percent = sum(!between(bias_rel,-0.1, 0.1)), n= n())))
+
+```
+times le 0/6
+
+```{r}
+auc_0_6 <- auc_1 %>% select(Pds,Clcreat,age,taille,SEX,SC_mosteller,greffe,amt,out_0,out_6,auc)
+
+
+set.seed(123)
+
+splits <- initial_split(auc_0_6, strata = auc)
+auc_train_0_6  <- training(splits)
+auc_test_0_6   <- testing(splits)
+
+set.seed(234)
+auc_set_0_6  <- validation_split(auc_train_0_6, 
+                            strata = auc, 
+                            prop = 0.80)
+
+auc_train_train_0_6<- analysis(auc_set_0_6$splits[[1]])
+auc_train_test_0_6<-assessment(auc_set_0_6$splits[[1]])
+
+auc_rec_0_6 <- recipe(auc ~ ., data = auc_train_train_0_6) %>%
+  step_normalize(all_numeric(), -all_outcomes()) %>%
+  step_dummy(greffe,SEX,one_hot=T) 
+
+auc_prep_recipe_0_6 <-  prep(auc_rec_0_6)
+auc_train_recipe_0_6 <-juice(auc_prep_recipe_0_6)
+summary(auc_train_recipe_0_6)
+
+
+### glmnet
+glmnet_spec <- linear_reg(penalty=tune(),mixture = 1) %>%
+  set_engine("glmnet") %>%
+  set_mode("regression")
+
+#workflow model+recipe
+glmnet_wf_0_6 <- workflow() %>%
+  add_recipe(auc_rec_0_6) %>%
+  add_model(glmnet_spec)
+
+
+##hyperparameters
+set.seed(2345)
+auc_folds_0_6<- vfold_cv(auc_train_train_0_6, v=10)#par défaut 10 fois
+
+#tuning
+set.seed(345)
+tune_glmnet_0_6 <- tune_grid(
+  glmnet_wf_0_6,
+  resamples = auc_folds_0_6,
+  grid = 30)
+
+
+tune_glmnet_0_6%>% collect_metrics()
+
+best_rmse_glmnet_0_6 <- select_best(tune_glmnet_0_6)
+final_glmnet_0_6 <- finalize_model(
+  glmnet_spec,
+  best_rmse_glmnet_0_6
+)
+
+final_glmnet_0_6
+
+
+library(vip)
+
+#finalize workflow
+final_wf_glmnet_0_6 <- workflow() %>%
+  add_recipe(auc_rec_0_6) %>%
+  add_model(final_glmnet_0_6)
+
+###resample#####
+set.seed(456)
+folds_0_6 <- vfold_cv(auc_train_train_0_6)#par défaut 10 fois
+set.seed(123)
+glmnet_rs_0_6 <- fit_resamples(object = final_wf_glmnet_0_6, resamples = folds_0_6, control = control_resamples(verbose=T, save_pred = T))
+
+##perf resample
+glmnet_rs_0_6 %>% collect_metrics()
+
+pred_obs_glmnet_0_6 <- glmnet_rs_0_6 %>% collect_predictions() %>%
+   mutate (bias_rel = (.pred - auc)/auc,
+          bias_rel_square = bias_rel * bias_rel)
+
+
+#perfs
+mean(pred_obs_glmnet_0_6$bias_rel)
+sqrt(mean(pred_obs_glmnet_0_6$bias_rel_square))
+
+glmnet_rs_0_6 %>%
+  collect_predictions() %>%
+  ggplot(mapping = aes(x = .pred, y = auc)) + 
+  geom_point() +
+  geom_smooth(method=lm) 
+
+rmarkdown::paged_table(as.data.frame(pred_obs_glmnet_0_6 %>% summarise(biais_rel = mean(bias_rel), relative_rmse = sqrt(mean(bias_rel_square)),biais_out_20percent = mean(!between(bias_rel,-0.2, 0.2)), nb_out_20percent = sum(!between(bias_rel,-0.2, 0.2)),biais_out_10percent = mean(!between(bias_rel,-0.1, 0.1)), nb_out_10percent = sum(!between(bias_rel,-0.1, 0.1)), n= n())))
+
+final_wf_glmnet_0_6 <- workflow() %>%
+  add_recipe(auc_rec_0_6) %>%
+  add_model(final_glmnet_0_6) %>% 
+  fit(auc_train_test_0_6)
+
+predict_0_6=predict(final_wf_glmnet_0_6,auc_train_test_0_6)%>%
+     bind_cols(auc=auc_train_test_0_6$auc) %>%
+  mutate (bias_rel = (.pred - auc)/auc,
+          bias_rel_square = bias_rel * bias_rel)
+
+rmarkdown::paged_table(as.data.frame(predict_0_6 %>% summarise(biais_rel = mean(bias_rel), relative_rmse = sqrt(mean(bias_rel_square)),biais_out_20percent = mean(!between(bias_rel,-0.2, 0.2)), nb_out_20percent = sum(!between(bias_rel,-0.2, 0.2)),biais_out_10percent = mean(!between(bias_rel,-0.1, 0.1)), nb_out_10percent = sum(!between(bias_rel,-0.1, 0.1)), n= n())))
+
+
+# xgboost
+
+ #model
+xgb_spec <- boost_tree(mode = "regression",
+                        mtry = tune(),
+                        trees = 1000,
+                        min_n = tune(),
+                        tree_depth = tune(),
+                        sample_size=tune(),
+                        learn_rate = tune()) %>% set_engine("xgboost")
+
+#workflow model+recipe
+xgb_wf_0_6 <- workflow() %>%
+  add_recipe(auc_rec_0_6) %>%
+  add_model(xgb_spec)
+#
+##hyperparameters
+set.seed(2345)
+auc_folds_0_6 <- vfold_cv(auc_train_train_0_6)#par défaut 10 fois
+
+#tuning
+set.seed(345)
+tune_xgb <- tune_grid(
+  xgb_wf_0_6,
+  resamples = auc_folds_0_6,
+  grid = 30)
+
+
+#visualisatin resultats
+tune_xgb %>%
+  collect_metrics() %>%
+  filter(.metric == "rmse") %>%
+  dplyr::select(mean, min_n, mtry, learn_rate, tree_depth,sample_size) %>%
+  pivot_longer(min_n:tree_depth,
+               values_to = "value",
+               names_to = "parameter"
+  ) %>%
+  ggplot(aes(value, mean, color = parameter)) +
+  geom_point(show.legend = FALSE) +
+  facet_wrap(~parameter, scales = "free_x") +
+  labs(x = NULL, y = "RMSE")
+
+#choix du best model
+best_rmse_xgb_0_6 <- select_best(tune_xgb)
+
+final_xgb_0_6<- finalize_model(
+  xgb_spec,
+  best_rmse_xgb_0_6
+)
+
+final_xgb_0_6
+
+final_xgb_0_6 %>%
+  set_engine("xgboost", importance = "permutation") %>%
+  fit(auc ~ .,
+      data = juice(auc_prep_recipe_0_6)
+  ) %>%
+  vip::vip(geom = "col")
+
+#finalize workflow
+final_wf_xgb_0_6 <- workflow() %>%
+  add_recipe(auc_rec_0_6) %>%
+  add_model(final_xgb_0_6)%>%
+  fit(auc_train_train_0_6)
+
+###resample#####
+set.seed(456)
+folds_0_6 <- vfold_cv(auc_train_train_0_6)#par défaut 10 fois
+set.seed(123)
+xgb_rs_0_6 <- fit_resamples(object = final_wf_xgb_0_6, resamples = folds_0_6, control = control_resamples(verbose=T, save_pred = T))
+
+##perf resample
+xgb_rs_0_6 %>% collect_metrics()
+
+pred_obs_xgb_0_6 <- xgb_rs_0_6 %>% collect_predictions() %>%
+   mutate (bias_rel = (.pred - auc)/auc,
+          bias_rel_square = bias_rel * bias_rel)
+
+
+#perfs
+mean(pred_obs_xgb_0_6$bias_rel)
+
+sqrt(mean(pred_obs_xgb_0_6$bias_rel_square))
+
+xgb_rs_0_6 %>%
+  collect_predictions() %>%
+  ggplot(mapping = aes(x = .pred, y = auc)) + 
+  geom_point() +
+  geom_smooth(method=lm) 
+
+rmarkdown::paged_table(as.data.frame(pred_obs_xgb_0_6 %>% summarise(biais_rel = mean(bias_rel), relative_rmse = sqrt(mean(bias_rel_square)),biais_out_20percent = mean(!between(bias_rel,-0.2, 0.2)), nb_out_20percent = sum(!between(bias_rel,-0.2, 0.2)),biais_out_10percent = mean(!between(bias_rel,-0.1, 0.1)), nb_out_10percent = sum(!between(bias_rel,-0.1, 0.1)), n= n())))
+
+final_wf_xgb_0_6 <- workflow() %>%
+  add_recipe(auc_rec_0_6) %>%
+  add_model(final_xgb_0_6) %>% 
+  fit(auc_train_test_0_6)
+
+predict_0_6=predict(final_wf_xgb_0_6,auc_train_test_0_6)%>%
+     bind_cols(auc=auc_train_test_0_6$auc) %>%
+  mutate (bias_rel = (.pred - auc)/auc,
+          bias_rel_square = bias_rel * bias_rel)
+
+rmarkdown::paged_table(as.data.frame(predict_0_6 %>% summarise(biais_rel = mean(bias_rel), relative_rmse = sqrt(mean(bias_rel_square)),biais_out_20percent = mean(!between(bias_rel,-0.2, 0.2)), nb_out_20percent = sum(!between(bias_rel,-0.2, 0.2)),biais_out_10percent = mean(!between(bias_rel,-0.1, 0.1)), nb_out_10percent = sum(!between(bias_rel,-0.1, 0.1)), n= n())))
+
+
+#### mars
+
+# workflow mars
+
+mars_spec <- mars(num_terms = tune(), prod_degree = tune()) %>%
+  set_engine("earth") %>%
+  set_mode("regression")
+
+#workflow model+recipe
+mars_wf_0_6<- workflow() %>%
+  add_recipe(auc_rec_0_6) %>%
+  add_model(mars_spec)
+
+set.seed(345)
+#on reaffine grid
+mars_grid <- grid_regular(
+  num_terms(range = c(1L, 36L)),
+  prod_degree(range = c(1L, 2L)),
+  levels = 20
+)
+
+mars_grid
+
+
+
+##hyperparameters
+set.seed(2345)
+env_folds_0_6 <- vfold_cv(auc_train_train_0_6)#par défaut 10 fois
+
+
+#retune
+set.seed(456)
+library(earth)
+regular_res_0_6 <- tune_grid(
+ mars_wf_0_6,
+ resamples = env_folds_0_6,
+ grid = mars_grid)
+
+
+
+#visualisation
+regular_res_0_6 %>%
+  collect_metrics() %>%
+  filter(.metric == "rmse") %>%
+  mutate(prod_degree = factor(prod_degree)) %>%
+  ggplot(aes(num_terms, mean, color = prod_degree)) +
+  geom_line(alpha = 0.5, size = 1.5) +
+  geom_point() +
+  labs(y = "RMSE")
+
+#visualisation des résultats
+library(vip)
+#choix du best model
+best_rmse_mars_0_6<- select_best(regular_res_0_6)
+
+final_mars_0_6 <- finalize_model(
+  mars_spec,
+  best_rmse_mars_0_6
+)
+
+final_mars_0_6
+
+final_mars_0_6 %>%
+  set_engine("earth") %>%
+  fit(auc ~ .,
+      data = juice(auc_prep_recipe_0_6)
+  ) %>%
+  vip(geom = "col")
+
+
+#finalize workflow
+final_wf_mars_0_6 <- workflow() %>%
+  add_recipe(auc_rec_0_6) %>%
+  add_model(final_mars_0_6)
+
+###resample#####
+set.seed(456)
+folds_0_6 <- vfold_cv(auc_train_train_0_6)#par défaut 10 fois
+set.seed(123)
+mars_rs_0_6 <- fit_resamples(object = final_wf_mars_0_6, resamples = folds_0_6, control = control_resamples(verbose=T, save_pred = T))
+
+##perf resample
+mars_rs_0_6 %>% collect_metrics()
+
+#perfs
+pred_obs_mars_0_6 <- mars_rs_0_6 %>% collect_predictions() %>%
+   mutate (bias_rel = (.pred - auc)/auc,
+          bias_rel_square = bias_rel * bias_rel)
+
+mean(pred_obs_mars_0_6$bias_rel)
+
+sqrt(mean(pred_obs_mars_0_6$bias_rel_square))
+
+mars_rs_0_6 %>%
+  collect_predictions() %>%
+  ggplot(mapping = aes(x = .pred, y = auc)) + 
+  geom_point() +
+  geom_smooth(method=lm) 
+
+
+rmarkdown::paged_table(as.data.frame(pred_obs_mars_0_6 %>% summarise(biais_rel = mean(bias_rel), relative_rmse = sqrt(mean(bias_rel_square)),biais_out_20percent = mean(!between(bias_rel,-0.2, 0.2)), nb_out_20percent = sum(!between(bias_rel,-0.2, 0.2)),biais_out_10percent = mean(!between(bias_rel,-0.1, 0.1)), nb_out_10percent = sum(!between(bias_rel,-0.1, 0.1)), n= n())))
+
+final_wf_mars_0_6 <- workflow() %>%
+  add_recipe(auc_rec_0_6) %>%
+  add_model(final_mars_0_6) %>% 
+  fit(auc_train_test_0_6)
+
+predict_0_6=predict(final_wf_mars_0_6,auc_train_test_0_6)%>%
+     bind_cols(auc=auc_train_test_0_6$auc) %>%
+  mutate (bias_rel = (.pred - auc)/auc,
+          bias_rel_square = bias_rel * bias_rel)
+
+rmarkdown::paged_table(as.data.frame(predict_0_6 %>% summarise(biais_rel = mean(bias_rel), relative_rmse = sqrt(mean(bias_rel_square)),biais_out_20percent = mean(!between(bias_rel,-0.2, 0.2)), nb_out_20percent = sum(!between(bias_rel,-0.2, 0.2)),biais_out_10percent = mean(!between(bias_rel,-0.1, 0.1)), nb_out_10percent = sum(!between(bias_rel,-0.1, 0.1)), n= n())))
+
+
+
+### random forrest
+
+# #model
+
+
+rf_spec <- rand_forest(mode = "regression",
+                        mtry = tune(),
+                        trees = 1000,
+                        min_n = tune()
+                       ) %>% set_engine("ranger", importance = "permutation")
+
+
+
+#workflow model+recipe
+rf_wf <- workflow() %>%
+  add_recipe(auc_rec_0_6) %>%
+  add_model(rf_spec)
+#
+##hyperparameters
+set.seed(2345)
+folds_0_6 <- vfold_cv(auc_train_train_0_6)#par défaut 10 fois
+
+#tuning
+library(ranger)
+set.seed(345)
+tune_rf <- tune_grid(
+  rf_wf,
+  resamples = folds_0_6,
+  grid = 30
+)
+
+#visualisatin resultats
+
+autoplot(tune_rf) + 
+  ggtitle("tuning hyperparameter")
+
+#choix du best model
+best_rf_0_6 <- select_best(tune_rf)
+
+final_rf_0_6 <- finalize_model(
+  rf_spec,
+  best_rf_0_6
+)
+
+final_rf_0_6
+
+#finalize workflow
+final_wf_rf_0_6 <- workflow() %>%
+  add_recipe(auc_rec_0_6) %>%
+  add_model(final_rf_0_6)
+
+###resample#####
+set.seed(456)
+folds_cv <- vfold_cv(auc_train_train_0_6)#par défaut 10 fois
+
+## 10 fold CV
+rf_rs_0_6<- fit_resamples(object = final_wf_rf_0_6, resamples = folds_cv, control = control_resamples(verbose=T, save_pred = T))
+
+##perf resample
+rf_rs_0_6 %>% collect_metrics()
+
+
+#perfs
+pred_obs_rf_0_6 <- rf_rs_0_6 %>% collect_predictions() %>%
+   mutate (bias_rel = (.pred - auc)/auc,
+          bias_rel_square = bias_rel * bias_rel)
+
+
+
+
+rmarkdown::paged_table(as.data.frame(pred_obs_rf_0_6 %>% summarise(biais_rel = mean(bias_rel), relative_rmse = sqrt(mean(bias_rel_square)),biais_out_20percent = mean(!between(bias_rel,-0.2, 0.2)), nb_out_20percent = sum(!between(bias_rel,-0.2, 0.2)),biais_out_10percent = mean(!between(bias_rel,-0.1, 0.1)), nb_out_10percent = sum(!between(bias_rel,-0.1, 0.1)), n= n())))
+
+final_wf_rf_0_6 <- workflow() %>%
+  add_recipe(auc_rec_0_6) %>%
+  add_model(final_rf_0_6) %>% 
+  fit(auc_train_train_0_6)
+
+predict_0_6_rf=predict(final_wf_rf_0_6,auc_train_test_0_6)%>%
+     bind_cols(auc=auc_train_test_0_6$auc) %>%
+  mutate (bias_rel = (.pred - auc)/auc,
+          bias_rel_square = bias_rel * bias_rel)
+
+rmarkdown::paged_table(as.data.frame(predict_0_6_rf %>% summarise(biais_rel = mean(bias_rel), relative_rmse = sqrt(mean(bias_rel_square)),biais_out_20percent = mean(!between(bias_rel,-0.2, 0.2)), nb_out_20percent = sum(!between(bias_rel,-0.2, 0.2)),biais_out_10percent = mean(!between(bias_rel,-0.1, 0.1)), nb_out_10percent = sum(!between(bias_rel,-0.1, 0.1)), n= n())))
+
+
+#### SVM model
+
+svm_spec <- svm_linear() %>%
+  set_mode("regression") %>%
+  set_engine("LiblineaR")
+
+svm_wf <- workflow() %>%
+  add_recipe(auc_rec_0_6)
+
+library(LiblineaR)
+
+svm_fit <- svm_wf %>%
+  add_model(svm_spec) %>%
+  fit(data = auc_train_train_0_6)
+
+set.seed(123)
+
+svm_folds_0_6 <- vfold_cv(auc_train_train_0_6)
+
+svm_folds_0_6
+
+set.seed(123)
+
+svm_rs_0_6 <- fit_resamples(
+  svm_wf %>% add_model(svm_spec),
+  svm_folds_0_6,
+  control = control_resamples(save_pred = TRUE)
+)
+
+collect_metrics(svm_rs_0_6)
+
+
+#perfs
+pred_obs_SVM_0_6 <- svm_rs_0_6 %>% collect_predictions() %>%
+   mutate (bias_rel = (.pred - auc)/auc,
+          bias_rel_square = bias_rel * bias_rel)
+
+
+
+
+rmarkdown::paged_table(as.data.frame(pred_obs_SVM_0_6 %>% summarise(biais_rel = mean(bias_rel), relative_rmse = sqrt(mean(bias_rel_square)),biais_out_20percent = mean(!between(bias_rel,-0.2, 0.2)), nb_out_20percent = sum(!between(bias_rel,-0.2, 0.2)),biais_out_10percent = mean(!between(bias_rel,-0.1, 0.1)), nb_out_10percent = sum(!between(bias_rel,-0.1, 0.1)), n= n())))
+
+pred_obs_SVM_0_6<- workflow() %>%
+  add_recipe(auc_rec_0_6) %>%
+  add_model(svm_spec) %>% 
+  fit(auc_train_train_0_6)
+
+predict_0_6_svm=predict(pred_obs_SVM_0_6,auc_train_test_0_6)%>%
+     bind_cols(auc=auc_train_test_0_6$auc) %>%
+  mutate (bias_rel = (.pred - auc)/auc,
+          bias_rel_square = bias_rel * bias_rel)
+
+rmarkdown::paged_table(as.data.frame(predict_0_6_svm %>% summarise(biais_rel = mean(bias_rel), relative_rmse = sqrt(mean(bias_rel_square)),biais_out_20percent = mean(!between(bias_rel,-0.2, 0.2)), nb_out_20percent = sum(!between(bias_rel,-0.2, 0.2)),biais_out_10percent = mean(!between(bias_rel,-0.1, 0.1)), nb_out_10percent = sum(!between(bias_rel,-0.1, 0.1)), n= n())))
+
+```
+
+times le 1/6
+
+```{r}
+auc_1_6 <- auc_1 %>% select(Pds,Clcreat,age,taille,SEX,SC_mosteller,greffe,amt,out_1,out_6,auc)
+
+
+set.seed(123)
+
+splits <- initial_split(auc_1_6, strata = auc)
+auc_train_1_6  <- training(splits)
+auc_test_1_6   <- testing(splits)
+
+set.seed(234)
+auc_set_1_6  <- validation_split(auc_train_1_6, 
+                            strata = auc, 
+                            prop = 0.80)
+
+auc_train_train_1_6<- analysis(auc_set_1_6$splits[[1]])
+auc_train_test_1_6<-assessment(auc_set_1_6$splits[[1]])
+
+auc_rec_1_6 <- recipe(auc ~ ., data = auc_train_train_1_6) %>%
+  step_normalize(all_numeric(), -all_outcomes()) %>%
+  step_dummy(greffe,SEX,one_hot=T) 
+
+auc_prep_recipe_1_6 <-  prep(auc_rec_1_6)
+auc_train_recipe_1_6 <-juice(auc_prep_recipe_1_6)
+summary(auc_train_recipe_1_6)
+
+
+### glmnet
+glmnet_spec <- linear_reg(penalty=tune(),mixture = 1) %>%
+  set_engine("glmnet") %>%
+  set_mode("regression")
+
+#workflow model+recipe
+glmnet_wf_1_6 <- workflow() %>%
+  add_recipe(auc_rec_1_6) %>%
+  add_model(glmnet_spec)
+
+
+##hyperparameters
+set.seed(2345)
+auc_folds_1_6<- vfold_cv(auc_train_train_1_6, v=10)#par défaut 10 fois
+
+#tuning
+set.seed(345)
+tune_glmnet_1_6 <- tune_grid(
+  glmnet_wf_1_6,
+  resamples = auc_folds_1_6,
+  grid = 30)
+
+
+tune_glmnet_1_6%>% collect_metrics()
+
+best_rmse_glmnet_1_6 <- select_best(tune_glmnet_1_6)
+final_glmnet_1_6 <- finalize_model(
+  glmnet_spec,
+  best_rmse_glmnet_1_6
+)
+
+final_glmnet_1_6
+
+
+library(vip)
+
+#finalize workflow
+final_wf_glmnet_1_6 <- workflow() %>%
+  add_recipe(auc_rec_1_6) %>%
+  add_model(final_glmnet_1_6)
+
+###resample#####
+set.seed(456)
+folds_1_6 <- vfold_cv(auc_train_train_1_6)#par défaut 10 fois
+set.seed(123)
+glmnet_rs_1_6 <- fit_resamples(object = final_wf_glmnet_1_6, resamples = folds_1_6, control = control_resamples(verbose=T, save_pred = T))
+
+##perf resample
+glmnet_rs_1_6 %>% collect_metrics()
+
+pred_obs_glmnet_1_6 <- glmnet_rs_1_6 %>% collect_predictions() %>%
+   mutate (bias_rel = (.pred - auc)/auc,
+          bias_rel_square = bias_rel * bias_rel)
+
+
+#perfs
+mean(pred_obs_glmnet_1_6$bias_rel)
+sqrt(mean(pred_obs_glmnet_1_6$bias_rel_square))
+
+glmnet_rs_1_6 %>%
+  collect_predictions() %>%
+  ggplot(mapping = aes(x = .pred, y = auc)) + 
+  geom_point() +
+  geom_smooth(method=lm) 
+
+rmarkdown::paged_table(as.data.frame(pred_obs_glmnet_1_6 %>% summarise(biais_rel = mean(bias_rel), relative_rmse = sqrt(mean(bias_rel_square)),biais_out_20percent = mean(!between(bias_rel,-0.2, 0.2)), nb_out_20percent = sum(!between(bias_rel,-0.2, 0.2)),biais_out_10percent = mean(!between(bias_rel,-0.1, 0.1)), nb_out_10percent = sum(!between(bias_rel,-0.1, 0.1)), n= n())))
+
+final_wf_glmnet_1_6 <- workflow() %>%
+  add_recipe(auc_rec_1_6) %>%
+  add_model(final_glmnet_1_6) %>% 
+  fit(auc_train_test_1_6)
+
+predict_1_6=predict(final_wf_glmnet_1_6,auc_train_test_1_6)%>%
+     bind_cols(auc=auc_train_test_1_6$auc) %>%
+  mutate (bias_rel = (.pred - auc)/auc,
+          bias_rel_square = bias_rel * bias_rel)
+
+rmarkdown::paged_table(as.data.frame(predict_1_6 %>% summarise(biais_rel = mean(bias_rel), relative_rmse = sqrt(mean(bias_rel_square)),biais_out_20percent = mean(!between(bias_rel,-0.2, 0.2)), nb_out_20percent = sum(!between(bias_rel,-0.2, 0.2)),biais_out_10percent = mean(!between(bias_rel,-0.1, 0.1)), nb_out_10percent = sum(!between(bias_rel,-0.1, 0.1)), n= n())))
+
+
+
+# xgboost
+
+ #model
+xgb_spec <- boost_tree(mode = "regression",
+                        mtry = tune(),
+                        trees = 1000,
+                        min_n = tune(),
+                        tree_depth = tune(),
+                        sample_size=tune(),
+                        learn_rate = tune()) %>% set_engine("xgboost")
+
+#workflow model+recipe
+xgb_wf_1_6 <- workflow() %>%
+  add_recipe(auc_rec_1_6) %>%
+  add_model(xgb_spec)
+#
+##hyperparameters
+set.seed(2345)
+auc_folds_1_6 <- vfold_cv(auc_train_train_1_6)#par défaut 10 fois
+
+#tuning
+set.seed(345)
+tune_xgb <- tune_grid(
+  xgb_wf_1_6,
+  resamples = auc_folds_1_6,
+  grid = 30)
+
+
+#visualisatin resultats
+tune_xgb %>%
+  collect_metrics() %>%
+  filter(.metric == "rmse") %>%
+  dplyr::select(mean, min_n, mtry, learn_rate, tree_depth,sample_size) %>%
+  pivot_longer(min_n:tree_depth,
+               values_to = "value",
+               names_to = "parameter"
+  ) %>%
+  ggplot(aes(value, mean, color = parameter)) +
+  geom_point(show.legend = FALSE) +
+  facet_wrap(~parameter, scales = "free_x") +
+  labs(x = NULL, y = "RMSE")
+
+#choix du best model
+best_rmse_xgb_1_6 <- select_best(tune_xgb)
+
+final_xgb_1_6<- finalize_model(
+  xgb_spec,
+  best_rmse_xgb_1_6
+)
+
+final_xgb_1_6
+
+final_xgb_1_6 %>%
+  set_engine("xgboost", importance = "permutation") %>%
+  fit(auc ~ .,
+      data = juice(auc_prep_recipe_1_6)
+  ) %>%
+  vip::vip(geom = "col")
+
+#finalize workflow
+final_wf_xgb_1_6 <- workflow() %>%
+  add_recipe(auc_rec_1_6) %>%
+  add_model(final_xgb_1_6)%>%
+  fit(auc_train_train_1_6)
+
+###resample#####
+set.seed(456)
+folds_1_6 <- vfold_cv(auc_train_train_1_6)#par défaut 10 fois
+set.seed(123)
+xgb_rs_1_6 <- fit_resamples(object = final_wf_xgb_1_6, resamples = folds_1_6, control = control_resamples(verbose=T, save_pred = T))
+
+##perf resample
+xgb_rs_1_6 %>% collect_metrics()
+
+pred_obs_xgb_1_6 <- xgb_rs_1_6 %>% collect_predictions() %>%
+   mutate (bias_rel = (.pred - auc)/auc,
+          bias_rel_square = bias_rel * bias_rel)
+
+
+#perfs
+mean(pred_obs_xgb_1_6$bias_rel)
+
+sqrt(mean(pred_obs_xgb_1_6$bias_rel_square))
+
+xgb_rs_1_6 %>%
+  collect_predictions() %>%
+  ggplot(mapping = aes(x = .pred, y = auc)) + 
+  geom_point() +
+  geom_smooth(method=lm) 
+
+rmarkdown::paged_table(as.data.frame(pred_obs_xgb_1_6 %>% summarise(biais_rel = mean(bias_rel), relative_rmse = sqrt(mean(bias_rel_square)),biais_out_20percent = mean(!between(bias_rel,-0.2, 0.2)), nb_out_20percent = sum(!between(bias_rel,-0.2, 0.2)),biais_out_10percent = mean(!between(bias_rel,-0.1, 0.1)), nb_out_10percent = sum(!between(bias_rel,-0.1, 0.1)), n= n())))
+
+final_wf_xgb_1_6 <- workflow() %>%
+  add_recipe(auc_rec_1_6) %>%
+  add_model(final_xgb_1_6) %>% 
+  fit(auc_train_test_1_6)
+
+predict_1_6=predict(final_wf_xgb_1_6,auc_train_test_1_6)%>%
+     bind_cols(auc=auc_train_test_1_6$auc) %>%
+  mutate (bias_rel = (.pred - auc)/auc,
+          bias_rel_square = bias_rel * bias_rel)
+
+rmarkdown::paged_table(as.data.frame(predict_1_6 %>% summarise(biais_rel = mean(bias_rel), relative_rmse = sqrt(mean(bias_rel_square)),biais_out_20percent = mean(!between(bias_rel,-0.2, 0.2)), nb_out_20percent = sum(!between(bias_rel,-0.2, 0.2)),biais_out_10percent = mean(!between(bias_rel,-0.1, 0.1)), nb_out_10percent = sum(!between(bias_rel,-0.1, 0.1)), n= n())))
+
+#### mars
+
+# workflow mars
+
+mars_spec <- mars(num_terms = tune(), prod_degree = tune()) %>%
+  set_engine("earth") %>%
+  set_mode("regression")
+
+#workflow model+recipe
+mars_wf_1_6<- workflow() %>%
+  add_recipe(auc_rec_1_6) %>%
+  add_model(mars_spec)
+
+set.seed(345)
+#on reaffine grid
+mars_grid <- grid_regular(
+  num_terms(range = c(1L, 36L)),
+  prod_degree(range = c(1L, 2L)),
+  levels = 20
+)
+
+mars_grid
+
+
+
+##hyperparameters
+set.seed(2345)
+env_folds_1_6 <- vfold_cv(auc_train_train_1_6)#par défaut 10 fois
+
+
+#retune
+set.seed(456)
+library(earth)
+regular_res_1_6 <- tune_grid(
+ mars_wf_1_6,
+ resamples = env_folds_1_6,
+ grid = mars_grid)
+
+
+
+
+#visualisation
+regular_res_1_6 %>%
+  collect_metrics() %>%
+  filter(.metric == "rmse") %>%
+  mutate(prod_degree = factor(prod_degree)) %>%
+  ggplot(aes(num_terms, mean, color = prod_degree)) +
+  geom_line(alpha = 0.5, size = 1.5) +
+  geom_point() +
+  labs(y = "RMSE")
+
+#visualisation des résultats
+library(vip)
+#choix du best model
+best_rmse_mars_1_6<- select_best(regular_res_1_6)
+
+final_mars_1_6 <- finalize_model(
+  mars_spec,
+  best_rmse_mars_1_6
+)
+
+final_mars_1_6
+
+final_mars_1_6 %>%
+  set_engine("earth") %>%
+  fit(auc ~ .,
+      data = juice(auc_prep_recipe_1_6)
+  ) %>%
+  vip(geom = "col")
+
+
+#finalize workflow
+final_wf_mars_1_6 <- workflow() %>%
+  add_recipe(auc_rec_1_6) %>%
+  add_model(final_mars_1_6)
+
+###resample#####
+set.seed(456)
+folds_1_6 <- vfold_cv(auc_train_train_1_6)#par défaut 10 fois
+set.seed(123)
+mars_rs_1_6 <- fit_resamples(object = final_wf_mars_1_6, resamples = folds_1_6, control = control_resamples(verbose=T, save_pred = T))
+
+##perf resample
+mars_rs_1_6 %>% collect_metrics()
+
+#perfs
+pred_obs_mars_1_6 <- mars_rs_1_6 %>% collect_predictions() %>%
+   mutate (bias_rel = (.pred - auc)/auc,
+          bias_rel_square = bias_rel * bias_rel)
+
+mean(pred_obs_mars_1_6$bias_rel)
+
+sqrt(mean(pred_obs_mars_1_6$bias_rel_square))
+
+mars_rs_1_6 %>%
+  collect_predictions() %>%
+  ggplot(mapping = aes(x = .pred, y = auc)) + 
+  geom_point() +
+  geom_smooth(method=lm) 
+
+
+rmarkdown::paged_table(as.data.frame(pred_obs_mars_1_6 %>% summarise(biais_rel = mean(bias_rel), relative_rmse = sqrt(mean(bias_rel_square)),biais_out_20percent = mean(!between(bias_rel,-0.2, 0.2)), nb_out_20percent = sum(!between(bias_rel,-0.2, 0.2)),biais_out_10percent = mean(!between(bias_rel,-0.1, 0.1)), nb_out_10percent = sum(!between(bias_rel,-0.1, 0.1)), n= n())))
+
+final_wf_mars_1_6 <- workflow() %>%
+  add_recipe(auc_rec_1_6) %>%
+  add_model(final_mars_1_6) %>% 
+  fit(auc_train_test_1_6)
+
+predict_1_6=predict(final_wf_mars_1_6,auc_train_test_1_6)%>%
+     bind_cols(auc=auc_train_test_1_6$auc) %>%
+  mutate (bias_rel = (.pred - auc)/auc,
+          bias_rel_square = bias_rel * bias_rel)
+
+rmarkdown::paged_table(as.data.frame(predict_1_6 %>% summarise(biais_rel = mean(bias_rel), relative_rmse = sqrt(mean(bias_rel_square)),biais_out_20percent = mean(!between(bias_rel,-0.2, 0.2)), nb_out_20percent = sum(!between(bias_rel,-0.2, 0.2)),biais_out_10percent = mean(!between(bias_rel,-0.1, 0.1)), nb_out_10percent = sum(!between(bias_rel,-0.1, 0.1)), n= n())))
+
+
+
+### random forrest
+
+# #model
+
+
+rf_spec <- rand_forest(mode = "regression",
+                        mtry = tune(),
+                        trees = 1000,
+                        min_n = tune()
+                       ) %>% set_engine("ranger", importance = "permutation")
+
+
+
+#workflow model+recipe
+rf_wf <- workflow() %>%
+  add_recipe(auc_rec_1_6) %>%
+  add_model(rf_spec)
+#
+##hyperparameters
+set.seed(2345)
+folds_1_6 <- vfold_cv(auc_train_train_1_6)#par défaut 10 fois
+
+#tuning
+library(ranger)
+set.seed(345)
+tune_rf <- tune_grid(
+  rf_wf,
+  resamples = folds_1_6,
+  grid = 30
+)
+
+#visualisatin resultats
+
+autoplot(tune_rf) + 
+  ggtitle("tuning hyperparameter")
+
+#choix du best model
+best_rf_1_6 <- select_best(tune_rf)
+
+final_rf_1_6 <- finalize_model(
+  rf_spec,
+  best_rf_1_6
+)
+
+final_rf_1_6
+
+#finalize workflow
+final_wf_rf_1_6 <- workflow() %>%
+  add_recipe(auc_rec_1_6) %>%
+  add_model(final_rf_1_6)
+
+###resample#####
+set.seed(456)
+folds_cv <- vfold_cv(auc_train_train_1_6)#par défaut 10 fois
+
+## 10 fold CV
+rf_rs_1_6<- fit_resamples(object = final_wf_rf_1_6, resamples = folds_cv, control = control_resamples(verbose=T, save_pred = T))
+
+##perf resample
+rf_rs_1_6 %>% collect_metrics()
+
+
+#perfs
+pred_obs_rf_1_6 <- rf_rs_1_6 %>% collect_predictions() %>%
+   mutate (bias_rel = (.pred - auc)/auc,
+          bias_rel_square = bias_rel * bias_rel)
+
+
+
+
+rmarkdown::paged_table(as.data.frame(pred_obs_rf_1_6 %>% summarise(biais_rel = mean(bias_rel), relative_rmse = sqrt(mean(bias_rel_square)),biais_out_20percent = mean(!between(bias_rel,-0.2, 0.2)), nb_out_20percent = sum(!between(bias_rel,-0.2, 0.2)),biais_out_10percent = mean(!between(bias_rel,-0.1, 0.1)), nb_out_10percent = sum(!between(bias_rel,-0.1, 0.1)), n= n())))
+
+final_wf_rf_1_6 <- workflow() %>%
+  add_recipe(auc_rec_1_6) %>%
+  add_model(final_rf_1_6) %>% 
+  fit(auc_train_train_1_6)
+
+predict_1_6_rf=predict(final_wf_rf_1_6,auc_train_test_1_6)%>%
+     bind_cols(auc=auc_train_test_1_6$auc) %>%
+  mutate (bias_rel = (.pred - auc)/auc,
+          bias_rel_square = bias_rel * bias_rel)
+
+rmarkdown::paged_table(as.data.frame(predict_1_6_rf %>% summarise(biais_rel = mean(bias_rel), relative_rmse = sqrt(mean(bias_rel_square)),biais_out_20percent = mean(!between(bias_rel,-0.2, 0.2)), nb_out_20percent = sum(!between(bias_rel,-0.2, 0.2)),biais_out_10percent = mean(!between(bias_rel,-0.1, 0.1)), nb_out_10percent = sum(!between(bias_rel,-0.1, 0.1)), n= n())))
+
+
+#### SVM model
+
+svm_spec <- svm_linear() %>%
+  set_mode("regression") %>%
+  set_engine("LiblineaR")
+
+svm_wf <- workflow() %>%
+  add_recipe(auc_rec_1_6)
+
+library(LiblineaR)
+
+svm_fit <- svm_wf %>%
+  add_model(svm_spec) %>%
+  fit(data = auc_train_train_1_6)
+
+set.seed(123)
+
+svm_folds_1_6 <- vfold_cv(auc_train_train_1_6)
+
+svm_folds_1_6
+
+set.seed(123)
+
+svm_rs_1_6 <- fit_resamples(
+  svm_wf %>% add_model(svm_spec),
+  svm_folds_1_6,
+  control = control_resamples(save_pred = TRUE)
+)
+
+collect_metrics(svm_rs_1_6)
+
+
+#perfs
+pred_obs_SVM_1_6 <- svm_rs_1_6 %>% collect_predictions() %>%
+   mutate (bias_rel = (.pred - auc)/auc,
+          bias_rel_square = bias_rel * bias_rel)
+
+
+
+
+rmarkdown::paged_table(as.data.frame(pred_obs_SVM_1_6 %>% summarise(biais_rel = mean(bias_rel), relative_rmse = sqrt(mean(bias_rel_square)),biais_out_20percent = mean(!between(bias_rel,-0.2, 0.2)), nb_out_20percent = sum(!between(bias_rel,-0.2, 0.2)),biais_out_10percent = mean(!between(bias_rel,-0.1, 0.1)), nb_out_10percent = sum(!between(bias_rel,-0.1, 0.1)), n= n())))
+
+pred_obs_SVM_1_6<- workflow() %>%
+  add_recipe(auc_rec_1_6) %>%
+  add_model(svm_spec) %>% 
+  fit(auc_train_train_1_6)
+
+predict_1_6_svm=predict(pred_obs_SVM_1_6,auc_train_test_1_6)%>%
+     bind_cols(auc=auc_train_test_1_6$auc) %>%
+  mutate (bias_rel = (.pred - auc)/auc,
+          bias_rel_square = bias_rel * bias_rel)
+
+rmarkdown::paged_table(as.data.frame(predict_1_6_svm %>% summarise(biais_rel = mean(bias_rel), relative_rmse = sqrt(mean(bias_rel_square)),biais_out_20percent = mean(!between(bias_rel,-0.2, 0.2)), nb_out_20percent = sum(!between(bias_rel,-0.2, 0.2)),biais_out_10percent = mean(!between(bias_rel,-0.1, 0.1)), nb_out_10percent = sum(!between(bias_rel,-0.1, 0.1)), n= n())))
+
+```
+
+times le 2/6
+
+```{r}
+auc_2_6 <- auc_1 %>% select(Pds,Clcreat,age,taille,SEX,SC_mosteller,greffe,amt,out_2,out_6,auc)
+
+
+set.seed(123)
+
+splits <- initial_split(auc_2_6, strata = auc)
+auc_train_2_6  <- training(splits)
+auc_test_2_6   <- testing(splits)
+
+set.seed(234)
+auc_set_2_6  <- validation_split(auc_train_2_6, 
+                            strata = auc, 
+                            prop = 0.80)
+
+auc_train_train_2_6<- analysis(auc_set_2_6$splits[[1]])
+auc_train_test_2_6<-assessment(auc_set_2_6$splits[[1]])
+
+auc_rec_2_6 <- recipe(auc ~ ., data = auc_train_train_2_6) %>%
+  step_normalize(all_numeric(), -all_outcomes()) %>%
+  step_dummy(greffe,SEX,one_hot=T) 
+
+auc_prep_recipe_2_6 <-  prep(auc_rec_2_6)
+auc_train_recipe_2_6 <-juice(auc_prep_recipe_2_6)
+summary(auc_train_recipe_2_6)
+
+
+### glmnet
+glmnet_spec <- linear_reg(penalty=tune(),mixture = 1) %>%
+  set_engine("glmnet") %>%
+  set_mode("regression")
+
+#workflow model+recipe
+glmnet_wf_2_6 <- workflow() %>%
+  add_recipe(auc_rec_2_6) %>%
+  add_model(glmnet_spec)
+
+
+##hyperparameters
+set.seed(2345)
+auc_folds_2_6<- vfold_cv(auc_train_train_2_6, v=10)#par défaut 10 fois
+
+#tuning
+set.seed(345)
+tune_glmnet_2_6 <- tune_grid(
+  glmnet_wf_2_6,
+  resamples = auc_folds_2_6,
+  grid = 30)
+
+
+tune_glmnet_2_6%>% collect_metrics()
+
+best_rmse_glmnet_2_6 <- select_best(tune_glmnet_2_6)
+final_glmnet_2_6 <- finalize_model(
+  glmnet_spec,
+  best_rmse_glmnet_2_6
+)
+
+final_glmnet_2_6
+
+
+library(vip)
+
+#finalize workflow
+final_wf_glmnet_2_6 <- workflow() %>%
+  add_recipe(auc_rec_2_6) %>%
+  add_model(final_glmnet_2_6)
+
+###resample#####
+set.seed(456)
+folds_2_6 <- vfold_cv(auc_train_train_2_6)#par défaut 10 fois
+set.seed(123)
+glmnet_rs_2_6 <- fit_resamples(object = final_wf_glmnet_2_6, resamples = folds_2_6, control = control_resamples(verbose=T, save_pred = T))
+
+##perf resample
+glmnet_rs_2_6 %>% collect_metrics()
+
+pred_obs_glmnet_2_6 <- glmnet_rs_2_6 %>% collect_predictions() %>%
+   mutate (bias_rel = (.pred - auc)/auc,
+          bias_rel_square = bias_rel * bias_rel)
+
+
+#perfs
+mean(pred_obs_glmnet_2_6$bias_rel)
+sqrt(mean(pred_obs_glmnet_2_6$bias_rel_square))
+
+glmnet_rs_2_6 %>%
+  collect_predictions() %>%
+  ggplot(mapping = aes(x = .pred, y = auc)) + 
+  geom_point() +
+  geom_smooth(method=lm) 
+
+rmarkdown::paged_table(as.data.frame(pred_obs_glmnet_2_6 %>% summarise(biais_rel = mean(bias_rel), relative_rmse = sqrt(mean(bias_rel_square)),biais_out_20percent = mean(!between(bias_rel,-0.2, 0.2)), nb_out_20percent = sum(!between(bias_rel,-0.2, 0.2)),biais_out_10percent = mean(!between(bias_rel,-0.1, 0.1)), nb_out_10percent = sum(!between(bias_rel,-0.1, 0.1)), n= n())))
+
+final_wf_glmnet_2_6 <- workflow() %>%
+  add_recipe(auc_rec_2_6) %>%
+  add_model(final_glmnet_2_6) %>% 
+  fit(auc_train_test_2_6)
+
+predict_2_6=predict(final_wf_glmnet_2_6,auc_train_test_2_6)%>%
+     bind_cols(auc=auc_train_test_2_6$auc) %>%
+  mutate (bias_rel = (.pred - auc)/auc,
+          bias_rel_square = bias_rel * bias_rel)
+
+rmarkdown::paged_table(as.data.frame(predict_2_6 %>% summarise(biais_rel = mean(bias_rel), relative_rmse = sqrt(mean(bias_rel_square)),biais_out_20percent = mean(!between(bias_rel,-0.2, 0.2)), nb_out_20percent = sum(!between(bias_rel,-0.2, 0.2)),biais_out_10percent = mean(!between(bias_rel,-0.1, 0.1)), nb_out_10percent = sum(!between(bias_rel,-0.1, 0.1)), n= n())))
+
+
+
+# xgboost
+
+ #model
+xgb_spec <- boost_tree(mode = "regression",
+                        mtry = tune(),
+                        trees = 1000,
+                        min_n = tune(),
+                        tree_depth = tune(),
+                        sample_size=tune(),
+                        learn_rate = tune()) %>% set_engine("xgboost")
+
+#workflow model+recipe
+xgb_wf_2_6 <- workflow() %>%
+  add_recipe(auc_rec_2_6) %>%
+  add_model(xgb_spec)
+#
+##hyperparameters
+set.seed(2345)
+auc_folds_2_6 <- vfold_cv(auc_train_train_2_6)#par défaut 10 fois
+
+#tuning
+set.seed(345)
+tune_xgb <- tune_grid(
+  xgb_wf_2_6,
+  resamples = auc_folds_2_6,
+  grid = 30)
+
+
+#visualisatin resultats
+tune_xgb %>%
+  collect_metrics() %>%
+  filter(.metric == "rmse") %>%
+  dplyr::select(mean, min_n, mtry, learn_rate, tree_depth,sample_size) %>%
+  pivot_longer(min_n:tree_depth,
+               values_to = "value",
+               names_to = "parameter"
+  ) %>%
+  ggplot(aes(value, mean, color = parameter)) +
+  geom_point(show.legend = FALSE) +
+  facet_wrap(~parameter, scales = "free_x") +
+  labs(x = NULL, y = "RMSE")
+
+#choix du best model
+best_rmse_xgb_2_6 <- select_best(tune_xgb)
+
+final_xgb_2_6<- finalize_model(
+  xgb_spec,
+  best_rmse_xgb_2_6
+)
+
+final_xgb_2_6
+
+final_xgb_2_6 %>%
+  set_engine("xgboost", importance = "permutation") %>%
+  fit(auc ~ .,
+      data = juice(auc_prep_recipe_2_6)
+  ) %>%
+  vip::vip(geom = "col")
+
+#finalize workflow
+final_wf_xgb_2_6 <- workflow() %>%
+  add_recipe(auc_rec_2_6) %>%
+  add_model(final_xgb_2_6)%>%
+  fit(auc_train_train_2_6)
+
+###resample#####
+set.seed(456)
+folds_2_6 <- vfold_cv(auc_train_train_2_6)#par défaut 10 fois
+set.seed(123)
+xgb_rs_2_6 <- fit_resamples(object = final_wf_xgb_2_6, resamples = folds_2_6, control = control_resamples(verbose=T, save_pred = T))
+
+##perf resample
+xgb_rs_2_6 %>% collect_metrics()
+
+pred_obs_xgb_2_6 <- xgb_rs_2_6 %>% collect_predictions() %>%
+   mutate (bias_rel = (.pred - auc)/auc,
+          bias_rel_square = bias_rel * bias_rel)
+
+
+#perfs
+mean(pred_obs_xgb_2_6$bias_rel)
+
+sqrt(mean(pred_obs_xgb_2_6$bias_rel_square))
+
+xgb_rs_2_6 %>%
+  collect_predictions() %>%
+  ggplot(mapping = aes(x = .pred, y = auc)) + 
+  geom_point() +
+  geom_smooth(method=lm) 
+
+rmarkdown::paged_table(as.data.frame(pred_obs_xgb_2_6 %>% summarise(biais_rel = mean(bias_rel), relative_rmse = sqrt(mean(bias_rel_square)),biais_out_20percent = mean(!between(bias_rel,-0.2, 0.2)), nb_out_20percent = sum(!between(bias_rel,-0.2, 0.2)),biais_out_10percent = mean(!between(bias_rel,-0.1, 0.1)), nb_out_10percent = sum(!between(bias_rel,-0.1, 0.1)), n= n())))
+
+final_wf_xgb_2_6 <- workflow() %>%
+  add_recipe(auc_rec_2_6) %>%
+  add_model(final_xgb_2_6) %>% 
+  fit(auc_train_test_2_6)
+
+predict_2_6=predict(final_wf_xgb_2_6,auc_train_test_2_6)%>%
+     bind_cols(auc=auc_train_test_2_6$auc) %>%
+  mutate (bias_rel = (.pred - auc)/auc,
+          bias_rel_square = bias_rel * bias_rel)
+
+rmarkdown::paged_table(as.data.frame(predict_2_6 %>% summarise(biais_rel = mean(bias_rel), relative_rmse = sqrt(mean(bias_rel_square)),biais_out_20percent = mean(!between(bias_rel,-0.2, 0.2)), nb_out_20percent = sum(!between(bias_rel,-0.2, 0.2)),biais_out_10percent = mean(!between(bias_rel,-0.1, 0.1)), nb_out_10percent = sum(!between(bias_rel,-0.1, 0.1)), n= n())))
+
+
+
+#### mars
+
+# workflow mars
+
+mars_spec <- mars(num_terms = tune(), prod_degree = tune()) %>%
+  set_engine("earth") %>%
+  set_mode("regression")
+
+#workflow model+recipe
+mars_wf_2_6<- workflow() %>%
+  add_recipe(auc_rec_2_6) %>%
+  add_model(mars_spec)
+
+set.seed(345)
+#on reaffine grid
+mars_grid <- grid_regular(
+  num_terms(range = c(1L, 36L)),
+  prod_degree(range = c(1L, 2L)),
+  levels = 20
+)
+
+mars_grid
+
+
+
+##hyperparameters
+set.seed(2345)
+env_folds_2_6 <- vfold_cv(auc_train_train_2_6)#par défaut 10 fois
+
+
+#retune
+set.seed(456)
+library(earth)
+regular_res_2_6 <- tune_grid(
+ mars_wf_2_6,
+ resamples = env_folds_2_6,
+ grid = mars_grid)
+
+
+
+
+#visualisation
+regular_res_2_6 %>%
+  collect_metrics() %>%
+  filter(.metric == "rmse") %>%
+  mutate(prod_degree = factor(prod_degree)) %>%
+  ggplot(aes(num_terms, mean, color = prod_degree)) +
+  geom_line(alpha = 0.5, size = 1.5) +
+  geom_point() +
+  labs(y = "RMSE")
+
+#visualisation des résultats
+library(vip)
+#choix du best model
+best_rmse_mars_2_6<- select_best(regular_res_2_6)
+
+final_mars_2_6 <- finalize_model(
+  mars_spec,
+  best_rmse_mars_2_6
+)
+
+final_mars_2_6
+
+final_mars_2_6 %>%
+  set_engine("earth") %>%
+  fit(auc ~ .,
+      data = juice(auc_prep_recipe_2_6)
+  ) %>%
+  vip(geom = "col")
+
+
+#finalize workflow
+final_wf_mars_2_6 <- workflow() %>%
+  add_recipe(auc_rec_2_6) %>%
+  add_model(final_mars_2_6)
+
+###resample#####
+set.seed(456)
+folds_2_6 <- vfold_cv(auc_train_train_2_6)#par défaut 10 fois
+set.seed(123)
+mars_rs_2_6 <- fit_resamples(object = final_wf_mars_2_6, resamples = folds_2_6, control = control_resamples(verbose=T, save_pred = T))
+
+##perf resample
+mars_rs_2_6 %>% collect_metrics()
+
+#perfs
+pred_obs_mars_2_6 <- mars_rs_2_6 %>% collect_predictions() %>%
+   mutate (bias_rel = (.pred - auc)/auc,
+          bias_rel_square = bias_rel * bias_rel)
+
+mean(pred_obs_mars_2_6$bias_rel)
+
+sqrt(mean(pred_obs_mars_2_6$bias_rel_square))
+
+mars_rs_2_6 %>%
+  collect_predictions() %>%
+  ggplot(mapping = aes(x = .pred, y = auc)) + 
+  geom_point() +
+  geom_smooth(method=lm) 
+
+
+rmarkdown::paged_table(as.data.frame(pred_obs_mars_2_6 %>% summarise(biais_rel = mean(bias_rel), relative_rmse = sqrt(mean(bias_rel_square)),biais_out_20percent = mean(!between(bias_rel,-0.2, 0.2)), nb_out_20percent = sum(!between(bias_rel,-0.2, 0.2)),biais_out_10percent = mean(!between(bias_rel,-0.1, 0.1)), nb_out_10percent = sum(!between(bias_rel,-0.1, 0.1)), n= n())))
+
+final_wf_glmnet_2_6 <- workflow() %>%
+  add_recipe(auc_rec_2_6) %>%
+  add_model(final_glmnet_2_6) %>% 
+  fit(auc_train_test_2_6)
+
+predict_2_6=predict(final_wf_glmnet_2_6,auc_train_test_2_6)%>%
+     bind_cols(auc=auc_train_test_2_6$auc) %>%
+  mutate (bias_rel = (.pred - auc)/auc,
+          bias_rel_square = bias_rel * bias_rel)
+
+rmarkdown::paged_table(as.data.frame(predict_2_6 %>% summarise(biais_rel = mean(bias_rel), relative_rmse = sqrt(mean(bias_rel_square)),biais_out_20percent = mean(!between(bias_rel,-0.2, 0.2)), nb_out_20percent = sum(!between(bias_rel,-0.2, 0.2)),biais_out_10percent = mean(!between(bias_rel,-0.1, 0.1)), nb_out_10percent = sum(!between(bias_rel,-0.1, 0.1)), n= n())))
+
+final_wf_mars_2_6 <- workflow() %>%
+  add_recipe(auc_rec_2_6) %>%
+  add_model(final_mars_2_6) %>% 
+  fit(auc_train_test_2_6)
+
+predict_2_6=predict(final_wf_mars_2_6,auc_train_test_2_6)%>%
+     bind_cols(auc=auc_train_test_2_6$auc) %>%
+  mutate (bias_rel = (.pred - auc)/auc,
+          bias_rel_square = bias_rel * bias_rel)
+
+rmarkdown::paged_table(as.data.frame(predict_2_6 %>% summarise(biais_rel = mean(bias_rel), relative_rmse = sqrt(mean(bias_rel_square)),biais_out_20percent = mean(!between(bias_rel,-0.2, 0.2)), nb_out_20percent = sum(!between(bias_rel,-0.2, 0.2)),biais_out_10percent = mean(!between(bias_rel,-0.1, 0.1)), nb_out_10percent = sum(!between(bias_rel,-0.1, 0.1)), n= n())))
+
+
+
+### random forrest
+
+# #model
+
+
+rf_spec <- rand_forest(mode = "regression",
+                        mtry = tune(),
+                        trees = 1000,
+                        min_n = tune()
+                       ) %>% set_engine("ranger", importance = "permutation")
+
+
+
+#workflow model+recipe
+rf_wf <- workflow() %>%
+  add_recipe(auc_rec_2_6) %>%
+  add_model(rf_spec)
+#
+##hyperparameters
+set.seed(2345)
+folds_2_6 <- vfold_cv(auc_train_train_2_6)#par défaut 10 fois
+
+#tuning
+library(ranger)
+set.seed(345)
+tune_rf <- tune_grid(
+  rf_wf,
+  resamples = folds_2_6,
+  grid = 30
+)
+
+#visualisatin resultats
+
+autoplot(tune_rf) + 
+  ggtitle("tuning hyperparameter")
+
+#choix du best model
+best_rf_2_6 <- select_best(tune_rf)
+
+final_rf_2_6 <- finalize_model(
+  rf_spec,
+  best_rf_2_6
+)
+
+final_rf_2_6
+
+#finalize workflow
+final_wf_rf_2_6 <- workflow() %>%
+  add_recipe(auc_rec_2_6) %>%
+  add_model(final_rf_2_6)
+
+###resample#####
+set.seed(456)
+folds_cv <- vfold_cv(auc_train_train_2_6)#par défaut 10 fois
+
+## 10 fold CV
+rf_rs_2_6<- fit_resamples(object = final_wf_rf_2_6, resamples = folds_cv, control = control_resamples(verbose=T, save_pred = T))
+
+##perf resample
+rf_rs_2_6 %>% collect_metrics()
+
+
+#perfs
+pred_obs_rf_2_6 <- rf_rs_2_6 %>% collect_predictions() %>%
+   mutate (bias_rel = (.pred - auc)/auc,
+          bias_rel_square = bias_rel * bias_rel)
+
+
+
+
+rmarkdown::paged_table(as.data.frame(pred_obs_rf_2_6 %>% summarise(biais_rel = mean(bias_rel), relative_rmse = sqrt(mean(bias_rel_square)),biais_out_20percent = mean(!between(bias_rel,-0.2, 0.2)), nb_out_20percent = sum(!between(bias_rel,-0.2, 0.2)),biais_out_10percent = mean(!between(bias_rel,-0.1, 0.1)), nb_out_10percent = sum(!between(bias_rel,-0.1, 0.1)), n= n())))
+
+final_wf_rf_2_6 <- workflow() %>%
+  add_recipe(auc_rec_2_6) %>%
+  add_model(final_rf_2_6) %>% 
+  fit(auc_train_train_2_6)
+
+predict_2_6_rf=predict(final_wf_rf_2_6,auc_train_test_2_6)%>%
+     bind_cols(auc=auc_train_test_2_6$auc) %>%
+  mutate (bias_rel = (.pred - auc)/auc,
+          bias_rel_square = bias_rel * bias_rel)
+
+rmarkdown::paged_table(as.data.frame(predict_2_6_rf %>% summarise(biais_rel = mean(bias_rel), relative_rmse = sqrt(mean(bias_rel_square)),biais_out_20percent = mean(!between(bias_rel,-0.2, 0.2)), nb_out_20percent = sum(!between(bias_rel,-0.2, 0.2)),biais_out_10percent = mean(!between(bias_rel,-0.1, 0.1)), nb_out_10percent = sum(!between(bias_rel,-0.1, 0.1)), n= n())))
+
+
+#### SVM model
+
+svm_spec <- svm_linear() %>%
+  set_mode("regression") %>%
+  set_engine("LiblineaR")
+
+svm_wf <- workflow() %>%
+  add_recipe(auc_rec_2_6)
+
+library(LiblineaR)
+
+svm_fit <- svm_wf %>%
+  add_model(svm_spec) %>%
+  fit(data = auc_train_train_2_6)
+
+set.seed(123)
+
+svm_folds_2_6 <- vfold_cv(auc_train_train_2_6)
+
+svm_folds_2_6
+
+set.seed(123)
+
+svm_rs_2_6 <- fit_resamples(
+  svm_wf %>% add_model(svm_spec),
+  svm_folds_2_6,
+  control = control_resamples(save_pred = TRUE)
+)
+
+collect_metrics(svm_rs_2_6)
+
+
+#perfs
+pred_obs_SVM_2_6 <- svm_rs_2_6 %>% collect_predictions() %>%
+   mutate (bias_rel = (.pred - auc)/auc,
+          bias_rel_square = bias_rel * bias_rel)
+
+
+
+
+rmarkdown::paged_table(as.data.frame(pred_obs_SVM_2_6 %>% summarise(biais_rel = mean(bias_rel), relative_rmse = sqrt(mean(bias_rel_square)),biais_out_20percent = mean(!between(bias_rel,-0.2, 0.2)), nb_out_20percent = sum(!between(bias_rel,-0.2, 0.2)),biais_out_10percent = mean(!between(bias_rel,-0.1, 0.1)), nb_out_10percent = sum(!between(bias_rel,-0.1, 0.1)), n= n())))
+
+pred_obs_SVM_2_6<- workflow() %>%
+  add_recipe(auc_rec_2_6) %>%
+  add_model(svm_spec) %>% 
+  fit(auc_train_train_2_6)
+
+predict_2_6_svm=predict(pred_obs_SVM_2_6,auc_train_test_2_6)%>%
+     bind_cols(auc=auc_train_test_2_6$auc) %>%
+  mutate (bias_rel = (.pred - auc)/auc,
+          bias_rel_square = bias_rel * bias_rel)
+
+rmarkdown::paged_table(as.data.frame(predict_2_6_svm %>% summarise(biais_rel = mean(bias_rel), relative_rmse = sqrt(mean(bias_rel_square)),biais_out_20percent = mean(!between(bias_rel,-0.2, 0.2)), nb_out_20percent = sum(!between(bias_rel,-0.2, 0.2)),biais_out_10percent = mean(!between(bias_rel,-0.1, 0.1)), nb_out_10percent = sum(!between(bias_rel,-0.1, 0.1)), n= n())))
+```
+
+times le 3_6
+
+```{r}
+auc_3_6 <- auc_1 %>% select(Pds,Clcreat,age,taille,SEX,SC_mosteller,greffe,amt,out_3,out_6,auc)
+
+
+set.seed(123)
+
+splits <- initial_split(auc_3_6, strata = auc)
+auc_train_3_6  <- training(splits)
+auc_test_3_6   <- testing(splits)
+
+set.seed(234)
+auc_set_3_6  <- validation_split(auc_train_3_6, 
+                            strata = auc, 
+                            prop = 0.80)
+
+auc_train_train_3_6<- analysis(auc_set_3_6$splits[[1]])
+auc_train_test_3_6<-assessment(auc_set_3_6$splits[[1]])
+
+auc_rec_3_6 <- recipe(auc ~ ., data = auc_train_train_3_6) %>%
+  step_normalize(all_numeric(), -all_outcomes()) %>%
+  step_dummy(greffe,SEX,one_hot=T) 
+
+auc_prep_recipe_3_6 <-  prep(auc_rec_3_6)
+auc_train_recipe_3_6 <-juice(auc_prep_recipe_3_6)
+summary(auc_train_recipe_3_6)
+
+
+### glmnet
+glmnet_spec <- linear_reg(penalty=tune(),mixture = 1) %>%
+  set_engine("glmnet") %>%
+  set_mode("regression")
+
+#workflow model+recipe
+glmnet_wf_3_6 <- workflow() %>%
+  add_recipe(auc_rec_3_6) %>%
+  add_model(glmnet_spec)
+
+
+##hyperparameters
+set.seed(2345)
+auc_folds_3_6<- vfold_cv(auc_train_train_3_6, v=10)#par défaut 10 fois
+
+#tuning
+set.seed(345)
+tune_glmnet_3_6 <- tune_grid(
+  glmnet_wf_3_6,
+  resamples = auc_folds_3_6,
+  grid = 30)
+
+
+tune_glmnet_3_6%>% collect_metrics()
+
+best_rmse_glmnet_3_6 <- select_best(tune_glmnet_3_6)
+final_glmnet_3_6 <- finalize_model(
+  glmnet_spec,
+  best_rmse_glmnet_3_6
+)
+
+final_glmnet_3_6
+
+
+library(vip)
+
+#finalize workflow
+final_wf_glmnet_3_6 <- workflow() %>%
+  add_recipe(auc_rec_3_6) %>%
+  add_model(final_glmnet_3_6)
+
+###resample#####
+set.seed(456)
+folds_3_6 <- vfold_cv(auc_train_train_3_6)#par défaut 10 fois
+set.seed(123)
+glmnet_rs_3_6 <- fit_resamples(object = final_wf_glmnet_3_6, resamples = folds_3_6, control = control_resamples(verbose=T, save_pred = T))
+
+##perf resample
+glmnet_rs_3_6 %>% collect_metrics()
+
+pred_obs_glmnet_3_6 <- glmnet_rs_3_6 %>% collect_predictions() %>%
+   mutate (bias_rel = (.pred - auc)/auc,
+          bias_rel_square = bias_rel * bias_rel)
+
+
+#perfs
+mean(pred_obs_glmnet_3_6$bias_rel)
+sqrt(mean(pred_obs_glmnet_3_6$bias_rel_square))
+
+glmnet_rs_3_6 %>%
+  collect_predictions() %>%
+  ggplot(mapping = aes(x = .pred, y = auc)) + 
+  geom_point() +
+  geom_smooth(method=lm) 
+
+rmarkdown::paged_table(as.data.frame(pred_obs_glmnet_3_6 %>% summarise(biais_rel = mean(bias_rel), relative_rmse = sqrt(mean(bias_rel_square)),biais_out_20percent = mean(!between(bias_rel,-0.2, 0.2)), nb_out_20percent = sum(!between(bias_rel,-0.2, 0.2)),biais_out_10percent = mean(!between(bias_rel,-0.1, 0.1)), nb_out_10percent = sum(!between(bias_rel,-0.1, 0.1)), n= n())))
+
+final_wf_glmnet_3_6 <- workflow() %>%
+  add_recipe(auc_rec_3_6) %>%
+  add_model(final_glmnet_3_6) %>% 
+  fit(auc_train_test_3_6)
+
+predict_3_6=predict(final_wf_glmnet_3_6,auc_train_test_3_6)%>%
+     bind_cols(auc=auc_train_test_3_6$auc) %>%
+  mutate (bias_rel = (.pred - auc)/auc,
+          bias_rel_square = bias_rel * bias_rel)
+
+rmarkdown::paged_table(as.data.frame(predict_3_6 %>% summarise(biais_rel = mean(bias_rel), relative_rmse = sqrt(mean(bias_rel_square)),biais_out_20percent = mean(!between(bias_rel,-0.2, 0.2)), nb_out_20percent = sum(!between(bias_rel,-0.2, 0.2)),biais_out_10percent = mean(!between(bias_rel,-0.1, 0.1)), nb_out_10percent = sum(!between(bias_rel,-0.1, 0.1)), n= n())))
+
+
+
+# xgboost
+
+ #model
+xgb_spec <- boost_tree(mode = "regression",
+                        mtry = tune(),
+                        trees = 1000,
+                        min_n = tune(),
+                        tree_depth = tune(),
+                        sample_size=tune(),
+                        learn_rate = tune()) %>% set_engine("xgboost")
+
+#workflow model+recipe
+xgb_wf_3_6 <- workflow() %>%
+  add_recipe(auc_rec_3_6) %>%
+  add_model(xgb_spec)
+#
+##hyperparameters
+set.seed(2345)
+auc_folds_3_6 <- vfold_cv(auc_train_train_3_6)#par défaut 10 fois
+
+#tuning
+set.seed(345)
+tune_xgb <- tune_grid(
+  xgb_wf_3_6,
+  resamples = auc_folds_3_6,
+  grid = 30)
+
+
+#visualisatin resultats
+tune_xgb %>%
+  collect_metrics() %>%
+  filter(.metric == "rmse") %>%
+  dplyr::select(mean, min_n, mtry, learn_rate, tree_depth,sample_size) %>%
+  pivot_longer(min_n:tree_depth,
+               values_to = "value",
+               names_to = "parameter"
+  ) %>%
+  ggplot(aes(value, mean, color = parameter)) +
+  geom_point(show.legend = FALSE) +
+  facet_wrap(~parameter, scales = "free_x") +
+  labs(x = NULL, y = "RMSE")
+
+#choix du best model
+best_rmse_xgb_3_6 <- select_best(tune_xgb)
+
+final_xgb_3_6<- finalize_model(
+  xgb_spec,
+  best_rmse_xgb_3_6
+)
+
+final_xgb_3_6
+
+final_xgb_3_6 %>%
+  set_engine("xgboost", importance = "permutation") %>%
+  fit(auc ~ .,
+      data = juice(auc_prep_recipe_3_6)
+  ) %>%
+  vip::vip(geom = "col")
+
+#finalize workflow
+final_wf_xgb_3_6 <- workflow() %>%
+  add_recipe(auc_rec_3_6) %>%
+  add_model(final_xgb_3_6)%>%
+  fit(auc_train_train_3_6)
+
+###resample#####
+set.seed(456)
+folds_3_6 <- vfold_cv(auc_train_train_3_6)#par défaut 10 fois
+set.seed(123)
+xgb_rs_3_6 <- fit_resamples(object = final_wf_xgb_3_6, resamples = folds_3_6, control = control_resamples(verbose=T, save_pred = T))
+
+##perf resample
+xgb_rs_3_6 %>% collect_metrics()
+
+pred_obs_xgb_3_6 <- xgb_rs_3_6 %>% collect_predictions() %>%
+   mutate (bias_rel = (.pred - auc)/auc,
+          bias_rel_square = bias_rel * bias_rel)
+
+
+#perfs
+mean(pred_obs_xgb_3_6$bias_rel)
+
+sqrt(mean(pred_obs_xgb_3_6$bias_rel_square))
+
+xgb_rs_3_6 %>%
+  collect_predictions() %>%
+  ggplot(mapping = aes(x = .pred, y = auc)) + 
+  geom_point() +
+  geom_smooth(method=lm) 
+
+rmarkdown::paged_table(as.data.frame(pred_obs_xgb_3_6 %>% summarise(biais_rel = mean(bias_rel), relative_rmse = sqrt(mean(bias_rel_square)),biais_out_20percent = mean(!between(bias_rel,-0.2, 0.2)), nb_out_20percent = sum(!between(bias_rel,-0.2, 0.2)),biais_out_10percent = mean(!between(bias_rel,-0.1, 0.1)), nb_out_10percent = sum(!between(bias_rel,-0.1, 0.1)), n= n())))
+
+
+final_wf_xgb_3_6 <- workflow() %>%
+  add_recipe(auc_rec_3_6) %>%
+  add_model(final_xgb_3_6) %>% 
+  fit(auc_train_test_3_6)
+
+predict_3_6=predict(final_wf_xgb_3_6,auc_train_test_3_6)%>%
+     bind_cols(auc=auc_train_test_3_6$auc) %>%
+  mutate (bias_rel = (.pred - auc)/auc,
+          bias_rel_square = bias_rel * bias_rel)
+
+rmarkdown::paged_table(as.data.frame(predict_3_6 %>% summarise(biais_rel = mean(bias_rel), relative_rmse = sqrt(mean(bias_rel_square)),biais_out_20percent = mean(!between(bias_rel,-0.2, 0.2)), nb_out_20percent = sum(!between(bias_rel,-0.2, 0.2)),biais_out_10percent = mean(!between(bias_rel,-0.1, 0.1)), nb_out_10percent = sum(!between(bias_rel,-0.1, 0.1)), n= n())))
+
+
+#### mars
+
+# workflow mars
+
+mars_spec <- mars(num_terms = tune(), prod_degree = tune()) %>%
+  set_engine("earth") %>%
+  set_mode("regression")
+
+#workflow model+recipe
+mars_wf_3_6<- workflow() %>%
+  add_recipe(auc_rec_3_6) %>%
+  add_model(mars_spec)
+
+set.seed(345)
+#on reaffine grid
+mars_grid <- grid_regular(
+  num_terms(range = c(1L, 36L)),
+  prod_degree(range = c(1L, 2L)),
+  levels = 20
+)
+
+mars_grid
+
+
+
+##hyperparameters
+set.seed(2345)
+env_folds_3_6 <- vfold_cv(auc_train_train_3_6)#par défaut 10 fois
+
+
+#retune
+set.seed(456)
+library(earth)
+regular_res_3_6 <- tune_grid(
+ mars_wf_3_6,
+ resamples = env_folds_3_6,
+ grid = mars_grid)
+
+
+
+#visualisation
+regular_res_3_6 %>%
+  collect_metrics() %>%
+  filter(.metric == "rmse") %>%
+  mutate(prod_degree = factor(prod_degree)) %>%
+  ggplot(aes(num_terms, mean, color = prod_degree)) +
+  geom_line(alpha = 0.5, size = 1.5) +
+  geom_point() +
+  labs(y = "RMSE")
+
+#visualisation des résultats
+library(vip)
+#choix du best model
+best_rmse_mars_3_6<- select_best(regular_res_3_6)
+
+final_mars_3_6 <- finalize_model(
+  mars_spec,
+  best_rmse_mars_3_6
+)
+
+final_mars_3_6
+
+final_mars_3_6 %>%
+  set_engine("earth") %>%
+  fit(auc ~ .,
+      data = juice(auc_prep_recipe_3_6)
+  ) %>%
+  vip(geom = "col")
+
+
+#finalize workflow
+final_wf_mars_3_6 <- workflow() %>%
+  add_recipe(auc_rec_3_6) %>%
+  add_model(final_mars_3_6)
+
+###resample#####
+set.seed(456)
+folds_3_6 <- vfold_cv(auc_train_train_3_6)#par défaut 10 fois
+set.seed(123)
+mars_rs_3_6 <- fit_resamples(object = final_wf_mars_3_6, resamples = folds_3_6, control = control_resamples(verbose=T, save_pred = T))
+
+##perf resample
+mars_rs_3_6 %>% collect_metrics()
+
+#perfs
+pred_obs_mars_3_6 <- mars_rs_3_6 %>% collect_predictions() %>%
+   mutate (bias_rel = (.pred - auc)/auc,
+          bias_rel_square = bias_rel * bias_rel)
+
+mean(pred_obs_mars_3_6$bias_rel)
+
+sqrt(mean(pred_obs_mars_3_6$bias_rel_square))
+
+mars_rs_3_6 %>%
+  collect_predictions() %>%
+  ggplot(mapping = aes(x = .pred, y = auc)) + 
+  geom_point() +
+  geom_smooth(method=lm) 
+
+
+rmarkdown::paged_table(as.data.frame(pred_obs_mars_3_6 %>% summarise(biais_rel = mean(bias_rel), relative_rmse = sqrt(mean(bias_rel_square)),biais_out_20percent = mean(!between(bias_rel,-0.2, 0.2)), nb_out_20percent = sum(!between(bias_rel,-0.2, 0.2)),biais_out_10percent = mean(!between(bias_rel,-0.1, 0.1)), nb_out_10percent = sum(!between(bias_rel,-0.1, 0.1)), n= n())))
+
+
+final_wf_mars_3_6 <- workflow() %>%
+  add_recipe(auc_rec_3_6) %>%
+  add_model(final_mars_3_6) %>% 
+  fit(auc_train_test_3_6)
+
+predict_3_6=predict(final_wf_mars_3_6,auc_train_test_3_6)%>%
+     bind_cols(auc=auc_train_test_3_6$auc) %>%
+  mutate (bias_rel = (.pred - auc)/auc,
+          bias_rel_square = bias_rel * bias_rel)
+
+rmarkdown::paged_table(as.data.frame(predict_3_6 %>% summarise(biais_rel = mean(bias_rel), relative_rmse = sqrt(mean(bias_rel_square)),biais_out_20percent = mean(!between(bias_rel,-0.2, 0.2)), nb_out_20percent = sum(!between(bias_rel,-0.2, 0.2)),biais_out_10percent = mean(!between(bias_rel,-0.1, 0.1)), nb_out_10percent = sum(!between(bias_rel,-0.1, 0.1)), n= n())))
+
+
+
+### random forrest
+
+# #model
+
+
+rf_spec <- rand_forest(mode = "regression",
+                        mtry = tune(),
+                        trees = 1000,
+                        min_n = tune()
+                       ) %>% set_engine("ranger", importance = "permutation")
+
+
+
+#workflow model+recipe
+rf_wf <- workflow() %>%
+  add_recipe(auc_rec_3_6) %>%
+  add_model(rf_spec)
+#
+##hyperparameters
+set.seed(2345)
+folds_3_6 <- vfold_cv(auc_train_train_3_6)#par défaut 10 fois
+
+#tuning
+library(ranger)
+set.seed(345)
+tune_rf <- tune_grid(
+  rf_wf,
+  resamples = folds_3_6,
+  grid = 30
+)
+
+#visualisatin resultats
+
+autoplot(tune_rf) + 
+  ggtitle("tuning hyperparameter")
+
+#choix du best model
+best_rf_3_6 <- select_best(tune_rf)
+
+final_rf_3_6 <- finalize_model(
+  rf_spec,
+  best_rf_3_6
+)
+
+final_rf_3_6
+
+#finalize workflow
+final_wf_rf_3_6 <- workflow() %>%
+  add_recipe(auc_rec_3_6) %>%
+  add_model(final_rf_3_6)
+
+###resample#####
+set.seed(456)
+folds_cv <- vfold_cv(auc_train_train_3_6)#par défaut 10 fois
+
+## 10 fold CV
+rf_rs_3_6<- fit_resamples(object = final_wf_rf_3_6, resamples = folds_cv, control = control_resamples(verbose=T, save_pred = T))
+
+##perf resample
+rf_rs_3_6 %>% collect_metrics()
+
+
+#perfs
+pred_obs_rf_3_6 <- rf_rs_3_6 %>% collect_predictions() %>%
+   mutate (bias_rel = (.pred - auc)/auc,
+          bias_rel_square = bias_rel * bias_rel)
+
+
+
+
+rmarkdown::paged_table(as.data.frame(pred_obs_rf_3_6 %>% summarise(biais_rel = mean(bias_rel), relative_rmse = sqrt(mean(bias_rel_square)),biais_out_20percent = mean(!between(bias_rel,-0.2, 0.2)), nb_out_20percent = sum(!between(bias_rel,-0.2, 0.2)),biais_out_10percent = mean(!between(bias_rel,-0.1, 0.1)), nb_out_10percent = sum(!between(bias_rel,-0.1, 0.1)), n= n())))
+
+final_wf_rf_3_6 <- workflow() %>%
+  add_recipe(auc_rec_3_6) %>%
+  add_model(final_rf_3_6) %>% 
+  fit(auc_train_train_3_6)
+
+predict_3_6_rf=predict(final_wf_rf_3_6,auc_train_test_3_6)%>%
+     bind_cols(auc=auc_train_test_3_6$auc) %>%
+  mutate (bias_rel = (.pred - auc)/auc,
+          bias_rel_square = bias_rel * bias_rel)
+
+rmarkdown::paged_table(as.data.frame(predict_3_6_rf %>% summarise(biais_rel = mean(bias_rel), relative_rmse = sqrt(mean(bias_rel_square)),biais_out_20percent = mean(!between(bias_rel,-0.2, 0.2)), nb_out_20percent = sum(!between(bias_rel,-0.2, 0.2)),biais_out_10percent = mean(!between(bias_rel,-0.1, 0.1)), nb_out_10percent = sum(!between(bias_rel,-0.1, 0.1)), n= n())))
+
+
+#### SVM model
+
+svm_spec <- svm_linear() %>%
+  set_mode("regression") %>%
+  set_engine("LiblineaR")
+
+svm_wf <- workflow() %>%
+  add_recipe(auc_rec_3_6)
+
+library(LiblineaR)
+
+svm_fit <- svm_wf %>%
+  add_model(svm_spec) %>%
+  fit(data = auc_train_train_3_6)
+
+set.seed(123)
+
+svm_folds_3_6 <- vfold_cv(auc_train_train_3_6)
+
+svm_folds_3_6
+
+set.seed(123)
+
+svm_rs_3_6 <- fit_resamples(
+  svm_wf %>% add_model(svm_spec),
+  svm_folds_3_6,
+  control = control_resamples(save_pred = TRUE)
+)
+
+collect_metrics(svm_rs_3_6)
+
+
+#perfs
+pred_obs_SVM_3_6 <- svm_rs_3_6 %>% collect_predictions() %>%
+   mutate (bias_rel = (.pred - auc)/auc,
+          bias_rel_square = bias_rel * bias_rel)
+
+
+
+
+rmarkdown::paged_table(as.data.frame(pred_obs_SVM_3_6 %>% summarise(biais_rel = mean(bias_rel), relative_rmse = sqrt(mean(bias_rel_square)),biais_out_20percent = mean(!between(bias_rel,-0.2, 0.2)), nb_out_20percent = sum(!between(bias_rel,-0.2, 0.2)),biais_out_10percent = mean(!between(bias_rel,-0.1, 0.1)), nb_out_10percent = sum(!between(bias_rel,-0.1, 0.1)), n= n())))
+
+pred_obs_SVM_3_6<- workflow() %>%
+  add_recipe(auc_rec_3_6) %>%
+  add_model(svm_spec) %>% 
+  fit(auc_train_train_3_6)
+
+predict_3_6_svm=predict(pred_obs_SVM_3_6,auc_train_test_3_6)%>%
+     bind_cols(auc=auc_train_test_3_6$auc) %>%
+  mutate (bias_rel = (.pred - auc)/auc,
+          bias_rel_square = bias_rel * bias_rel)
+
+rmarkdown::paged_table(as.data.frame(predict_3_6_svm %>% summarise(biais_rel = mean(bias_rel), relative_rmse = sqrt(mean(bias_rel_square)),biais_out_20percent = mean(!between(bias_rel,-0.2, 0.2)), nb_out_20percent = sum(!between(bias_rel,-0.2, 0.2)),biais_out_10percent = mean(!between(bias_rel,-0.1, 0.1)), nb_out_10percent = sum(!between(bias_rel,-0.1, 0.1)), n= n())))
+
+```
+
+times le 4/6
+
+
+```{r}
+
+auc_4_6 <- auc_1 %>% select(Pds,Clcreat,age,taille,SEX,SC_mosteller,greffe,amt,out_4,out_6,auc)
+
+
+set.seed(123)
+
+splits <- initial_split(auc_4_6, strata = auc)
+auc_train_4_6  <- training(splits)
+auc_test_4_6   <- testing(splits)
+
+set.seed(234)
+auc_set_4_6  <- validation_split(auc_train_4_6, 
+                            strata = auc, 
+                            prop = 0.80)
+
+auc_train_train_4_6<- analysis(auc_set_4_6$splits[[1]])
+auc_train_test_4_6<-assessment(auc_set_4_6$splits[[1]])
+
+auc_rec_4_6 <- recipe(auc ~ ., data = auc_train_train_4_6) %>%
+  step_normalize(all_numeric(), -all_outcomes()) %>%
+  step_dummy(greffe,SEX,one_hot=T) 
+
+auc_prep_recipe_4_6 <-  prep(auc_rec_4_6)
+auc_train_recipe_4_6 <-juice(auc_prep_recipe_4_6)
+summary(auc_train_recipe_4_6)
+
+
+# xgboost
+
+ #model
+xgb_spec <- boost_tree(mode = "regression",
+                        mtry = tune(),
+                        trees = 1000,
+                        min_n = tune(),
+                        tree_depth = tune(),
+                        sample_size=tune(),
+                        learn_rate = tune()) %>% set_engine("xgboost")
+
+#workflow model+recipe
+xgb_wf_4_6 <- workflow() %>%
+  add_recipe(auc_rec_4_6) %>%
+  add_model(xgb_spec)
+#
+##hyperparameters
+set.seed(2345)
+auc_folds_4_6 <- vfold_cv(auc_train_train_4_6)#par défaut 10 fois
+
+#tuning
+set.seed(345)
+tune_xgb <- tune_grid(
+  xgb_wf_4_6,
+  resamples = auc_folds_4_6,
+  grid = 30)
+
+
+#visualisatin resultats
+tune_xgb %>%
+  collect_metrics() %>%
+  filter(.metric == "rmse") %>%
+  dplyr::select(mean, min_n, mtry, learn_rate, tree_depth,sample_size) %>%
+  pivot_longer(min_n:tree_depth,
+               values_to = "value",
+               names_to = "parameter"
+  ) %>%
+  ggplot(aes(value, mean, color = parameter)) +
+  geom_point(show.legend = FALSE) +
+  facet_wrap(~parameter, scales = "free_x") +
+  labs(x = NULL, y = "RMSE")
+
+#choix du best model
+best_rmse_xgb_4_6 <- select_best(tune_xgb)
+
+final_xgb_4_6<- finalize_model(
+  xgb_spec,
+  best_rmse_xgb_4_6
+)
+
+final_xgb_4_6
+
+final_xgb_4_6 %>%
+  set_engine("xgboost", importance = "permutation") %>%
+  fit(auc ~ .,
+      data = juice(auc_prep_recipe_4_6)
+  ) %>%
+  vip::vip(geom = "col")
+
+#finalize workflow
+final_wf_xgb_4_6 <- workflow() %>%
+  add_recipe(auc_rec_4_6) %>%
+  add_model(final_xgb_4_6)%>%
+  fit(auc_train_train_4_6)
+
+###resample#####
+set.seed(456)
+folds_4_6 <- vfold_cv(auc_train_train_4_6)#par défaut 10 fois
+set.seed(123)
+xgb_rs_4_6 <- fit_resamples(object = final_wf_xgb_4_6, resamples = folds_4_6, control = control_resamples(verbose=T, save_pred = T))
+
+##perf resample
+xgb_rs_4_6 %>% collect_metrics()
+
+pred_obs_xgb_4_6 <- xgb_rs_4_6 %>% collect_predictions() %>%
+   mutate (bias_rel = (.pred - auc)/auc,
+          bias_rel_square = bias_rel * bias_rel)
+
+
+#perfs
+mean(pred_obs_xgb_4_6$bias_rel)
+
+sqrt(mean(pred_obs_xgb_4_6$bias_rel_square))
+
+xgb_rs_4_6 %>%
+  collect_predictions() %>%
+  ggplot(mapping = aes(x = .pred, y = auc)) + 
+  geom_point() +
+  geom_smooth(method=lm) 
+
+rmarkdown::paged_table(as.data.frame(pred_obs_xgb_4_6 %>% summarise(biais_rel = mean(bias_rel), relative_rmse = sqrt(mean(bias_rel_square)),biais_out_20percent = mean(!between(bias_rel,-0.2, 0.2)), nb_out_20percent = sum(!between(bias_rel,-0.2, 0.2)),biais_out_10percent = mean(!between(bias_rel,-0.1, 0.1)), nb_out_10percent = sum(!between(bias_rel,-0.1, 0.1)), n= n())))
+
+
+final_wf_xgb_4_6 <- workflow() %>%
+  add_recipe(auc_rec_4_6) %>%
+  add_model(final_xgb_4_6) %>% 
+  fit(auc_train_test_4_6)
+
+predict_4_6=predict(final_wf_xgb_4_6,auc_train_test_4_6)%>%
+     bind_cols(auc=auc_train_test_4_6$auc) %>%
+  mutate (bias_rel = (.pred - auc)/auc,
+          bias_rel_square = bias_rel * bias_rel)
+
+rmarkdown::paged_table(as.data.frame(predict_4_6 %>% summarise(biais_rel = mean(bias_rel), relative_rmse = sqrt(mean(bias_rel_square)),biais_out_20percent = mean(!between(bias_rel,-0.2, 0.2)), nb_out_20percent = sum(!between(bias_rel,-0.2, 0.2)),biais_out_10percent = mean(!between(bias_rel,-0.1, 0.1)), nb_out_10percent = sum(!between(bias_rel,-0.1, 0.1)), n= n())))
+
+
+
+### random forrest
+
+# #model
+
+
+rf_spec <- rand_forest(mode = "regression",
+                        mtry = tune(),
+                        trees = 1000,
+                        min_n = tune()
+                       ) %>% set_engine("ranger", importance = "permutation")
+
+
+
+#workflow model+recipe
+rf_wf <- workflow() %>%
+  add_recipe(auc_rec_4_6) %>%
+  add_model(rf_spec)
+#
+##hyperparameters
+set.seed(2345)
+folds_4_6 <- vfold_cv(auc_train_train_4_6)#par défaut 10 fois
+
+#tuning
+library(ranger)
+set.seed(345)
+tune_rf <- tune_grid(
+  rf_wf,
+  resamples = folds_4_6,
+  grid = 30
+)
+
+#visualisatin resultats
+
+autoplot(tune_rf) + 
+  ggtitle("tuning hyperparameter")
+
+#choix du best model
+best_rf_4_6 <- select_best(tune_rf)
+
+final_rf_4_6 <- finalize_model(
+  rf_spec,
+  best_rf_4_6
+)
+
+final_rf_4_6
+
+#finalize workflow
+final_wf_rf_4_6 <- workflow() %>%
+  add_recipe(auc_rec_4_6) %>%
+  add_model(final_rf_4_6)
+
+###resample#####
+set.seed(456)
+folds_cv <- vfold_cv(auc_train_train_4_6)#par défaut 10 fois
+
+## 10 fold CV
+rf_rs_4_6<- fit_resamples(object = final_wf_rf_4_6, resamples = folds_cv, control = control_resamples(verbose=T, save_pred = T))
+
+##perf resample
+rf_rs_4_6 %>% collect_metrics()
+
+
+#perfs
+pred_obs_rf_4_6 <- rf_rs_4_6 %>% collect_predictions() %>%
+   mutate (bias_rel = (.pred - auc)/auc,
+          bias_rel_square = bias_rel * bias_rel)
+
+
+
+
+rmarkdown::paged_table(as.data.frame(pred_obs_rf_4_6 %>% summarise(biais_rel = mean(bias_rel), relative_rmse = sqrt(mean(bias_rel_square)),biais_out_20percent = mean(!between(bias_rel,-0.2, 0.2)), nb_out_20percent = sum(!between(bias_rel,-0.2, 0.2)),biais_out_10percent = mean(!between(bias_rel,-0.1, 0.1)), nb_out_10percent = sum(!between(bias_rel,-0.1, 0.1)), n= n())))
+
+final_wf_rf_4_6 <- workflow() %>%
+  add_recipe(auc_rec_4_6) %>%
+  add_model(final_rf_4_6) %>% 
+  fit(auc_train_train_4_6)
+
+predict_4_6_rf=predict(final_wf_rf_4_6,auc_train_test_4_6)%>%
+     bind_cols(auc=auc_train_test_4_6$auc) %>%
+  mutate (bias_rel = (.pred - auc)/auc,
+          bias_rel_square = bias_rel * bias_rel)
+
+rmarkdown::paged_table(as.data.frame(predict_4_6_rf %>% summarise(biais_rel = mean(bias_rel), relative_rmse = sqrt(mean(bias_rel_square)),biais_out_20percent = mean(!between(bias_rel,-0.2, 0.2)), nb_out_20percent = sum(!between(bias_rel,-0.2, 0.2)),biais_out_10percent = mean(!between(bias_rel,-0.1, 0.1)), nb_out_10percent = sum(!between(bias_rel,-0.1, 0.1)), n= n())))
+
+
+#### SVM model
+
+svm_spec <- svm_linear() %>%
+  set_mode("regression") %>%
+  set_engine("LiblineaR")
+
+svm_wf <- workflow() %>%
+  add_recipe(auc_rec_3_6)
+
+library(LiblineaR)
+
+svm_fit <- svm_wf %>%
+  add_model(svm_spec) %>%
+  fit(data = auc_train_train_4_6)
+
+set.seed(123)
+
+svm_folds_4_6 <- vfold_cv(auc_train_train_4_6)
+
+svm_folds_4_6
+
+set.seed(123)
+
+svm_rs_4_6 <- fit_resamples(
+  svm_wf %>% add_model(svm_spec),
+  svm_folds_4_6,
+  control = control_resamples(save_pred = TRUE)
+)
+
+collect_metrics(svm_rs_4_6)
+
+
+#perfs
+pred_obs_SVM_4_6 <- svm_rs_4_6 %>% collect_predictions() %>%
+   mutate (bias_rel = (.pred - auc)/auc,
+          bias_rel_square = bias_rel * bias_rel)
+
+
+
+
+rmarkdown::paged_table(as.data.frame(pred_obs_SVM_4_6 %>% summarise(biais_rel = mean(bias_rel), relative_rmse = sqrt(mean(bias_rel_square)),biais_out_20percent = mean(!between(bias_rel,-0.2, 0.2)), nb_out_20percent = sum(!between(bias_rel,-0.2, 0.2)),biais_out_10percent = mean(!between(bias_rel,-0.1, 0.1)), nb_out_10percent = sum(!between(bias_rel,-0.1, 0.1)), n= n())))
+
+pred_obs_SVM_4_6<- workflow() %>%
+  add_recipe(auc_rec_4_6) %>%
+  add_model(svm_spec) %>% 
+  fit(auc_train_train_4_6)
+
+predict_4_6_svm=predict(pred_obs_SVM_4_6,auc_train_test_4_6)%>%
+     bind_cols(auc=auc_train_test_4_6$auc) %>%
+  mutate (bias_rel = (.pred - auc)/auc,
+          bias_rel_square = bias_rel * bias_rel)
+
+rmarkdown::paged_table(as.data.frame(predict_4_6_svm %>% summarise(biais_rel = mean(bias_rel), relative_rmse = sqrt(mean(bias_rel_square)),biais_out_20percent = mean(!between(bias_rel,-0.2, 0.2)), nb_out_20percent = sum(!between(bias_rel,-0.2, 0.2)),biais_out_10percent = mean(!between(bias_rel,-0.1, 0.1)), nb_out_10percent = sum(!between(bias_rel,-0.1, 0.1)), n= n())))
+
+
+
+
+```
+
+xgboost is the best with 2/6 
+
+
+```{r}
+library(tidyverse)
+library(tidymodels)
+auc_2_6 <- auc_1 %>% select(Pds,Clcreat,age,taille,SEX,SC_mosteller,greffe,amt,out_2,out_6,auc)
+
+#auc_test_2_6 <- auc_test %>% select(Pds,Clcreat,age,taille,SEX,SC_mosteller,greffe,amt,out_2,out_6,auc)
+  
+set.seed(123)
+
+splits <- initial_split(auc_2_6, strata = auc)
+auc_train_2_6  <- training(splits)
+auc_test_2_6   <- testing(splits)
+
+
+auc_rec_2_6 <- recipe(auc ~ ., data = auc_train_2_6) %>%
+  step_normalize(all_numeric(), -all_outcomes()) %>%
+  step_dummy(greffe,SEX,one_hot=T) 
+
+auc_prep_recipe_2_6 <-  prep(auc_rec_2_6)
+auc_train_recipe_2_6 <-juice(auc_prep_recipe_2_6)
+summary(auc_train_recipe_2_6)
+
+
+
+
+# xgboost
+
+ #model
+xgb_spec <- boost_tree(mode = "regression",
+                        mtry = tune(),
+                        trees = 1000,
+                        min_n = tune(),
+                        tree_depth = tune(),
+                        sample_size=tune(),
+                        learn_rate = tune()) %>% set_engine("xgboost")
+
+#workflow model+recipe
+xgb_wf_2_6<- workflow() %>%
+  add_recipe(auc_rec_2_6) %>%
+  add_model(xgb_spec)
+#
+##hyperparameters
+set.seed(2345)
+auc_folds_2_6 <- vfold_cv(auc_train_2_6)#par défaut 10 fois
+
+#tuning
+set.seed(345)
+tune_xgb <- tune_grid(
+  xgb_wf_2_6,
+  resamples = auc_folds_2_6,
+  grid = 30)
+
+
+#visualisatin resultats
+tune_xgb %>%
+  collect_metrics() %>%
+  filter(.metric == "rmse") %>%
+  dplyr::select(mean, min_n, mtry, learn_rate, tree_depth,sample_size) %>%
+  pivot_longer(min_n:tree_depth,
+               values_to = "value",
+               names_to = "parameter"
+  ) %>%
+  ggplot(aes(value, mean, color = parameter)) +
+  geom_point(show.legend = FALSE) +
+  facet_wrap(~parameter, scales = "free_x") +
+  labs(x = NULL, y = "RMSE")
+
+#choix du best model
+best_rmse_xgb_2_6 <- select_best(tune_xgb)
+
+final_xgb_2_6<- finalize_model(
+  xgb_spec,
+  best_rmse_xgb_2_6
+)
+
+final_xgb_2_6
+
+final_xgb_2_6 %>%
+  set_engine("xgboost", importance = "permutation") %>%
+  fit(auc ~ .,
+      data = juice(auc_prep_recipe_2_6)
+  ) %>%
+  vip::vip(geom = "col")
+library(tidymodels)
+#finalize workflow
+final_wf_xgb_2_6 <- workflow() %>%
+  add_recipe(auc_rec_2_6) %>%
+  add_model(final_xgb_2_6)%>%
+  fit(auc_train_2_6)
+
+###resample#####
+set.seed(456)
+folds_2_6 <- vfold_cv(auc_train_2_6)#par défaut 10 fois
+set.seed(123)
+xgb_rs_2_6 <- fit_resamples(object = final_wf_xgb_2_6, resamples = folds_2_6, control = control_resamples(verbose=T, save_pred = T))
+
+##perf resample
+xgb_rs_2_6 %>% collect_metrics()
+
+pred_obs_xgb_2_6 <- xgb_rs_2_6%>% collect_predictions() %>%
+   mutate (bias_rel = (.pred - auc)/auc,
+          bias_rel_square = bias_rel * bias_rel)
+
+
+#perfs
+mean(pred_obs_xgb_2_6$bias_rel)
+
+sqrt(mean(pred_obs_xgb_2_6$bias_rel_square))
+
+xgb_rs_2_6 %>%
+  collect_predictions() %>%
+  ggplot(mapping = aes(x = .pred, y = auc)) + 
+  geom_point() +
+  geom_smooth(method=lm) 
+
+rmarkdown::paged_table(as.data.frame(pred_obs_xgb_2_6%>% summarise(biais_rel = mean(bias_rel), relative_rmse = sqrt(mean(bias_rel_square)),biais_out_20percent = mean(!between(bias_rel,-0.2, 0.2)), nb_out_20percent = sum(!between(bias_rel,-0.2, 0.2)),biais_out_10percent = mean(!between(bias_rel,-0.1, 0.1)), nb_out_10percent = sum(!between(bias_rel,-0.1, 0.1)), n= n())))
+
+
+
+```
+
+
+
+
+prediction base test
+
+
+```{r}
+library(tidyverse)
+predict_xgb_2_6=predict(final_wf_xgb_2_6,auc_test_2_6)%>%
+     bind_cols(auc=auc_test_2_6$auc) %>%
+  mutate (bias_rel = (.pred - auc)/auc,
+          bias_rel_square = bias_rel * bias_rel)
+
+rmarkdown::paged_table(as.data.frame(predict_xgb_2_6 %>% summarise(biais_rel = mean(bias_rel), relative_rmse = sqrt(mean(bias_rel_square)),biais_out_20percent = mean(!between(bias_rel,-0.2, 0.2)), nb_out_20percent = sum(!between(bias_rel,-0.2, 0.2)),biais_out_10percent = mean(!between(bias_rel,-0.1, 0.1)), nb_out_10percent = sum(!between(bias_rel,-0.1, 0.1)), n= n())))
+
+
+```
