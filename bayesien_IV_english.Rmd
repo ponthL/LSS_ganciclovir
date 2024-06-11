@@ -1,0 +1,373 @@
+---
+title: "simu_bayesien_IV_mai"
+output: html_document
+date: "2024-05-20"
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+
+library(tidyverse)
+library(truncnorm)
+library(mrgsolve)
+
+library(mrgsolve)
+library(mapbayr)
+
+library(dplyr)
+
+library(magrittr)
+library(ggplot2)
+library(PKNCA)
+library(ggplot2)
+library(ggcorrplot)
+library(yardstick)
+```
+on telecharge le fichier 
+
+```{r}
+auc_test_IV <-readRDS("auc_test_IV.rds")
+
+
+auc_test_IV <- auc_test_IV %>% dplyr::select (Pds,Clcreat,age,taille,SEX,SC_mosteller,greffe,amt,out_0, out_1,out_2,out_3,out_4,out_5,out_6,auc)%>% mutate(ID=c(1:2664))
+
+auc_test_lss_mapbayr_IV <-
+  auc_test_IV %>% 
+  pivot_longer(cols = out_0:out_6, names_to = "time",  values_to = "DV",names_prefix = "out_" )
+
+
+
+
+
+```
+
+franck model
+
+```{r}
+code_beneIV <- "
+
+[PROB] #modèle Ganciclovir bjcp Franck et al 2020
+
+[SET] end=100, delta=0.1
+
+[PARAM] @annotated
+
+
+TV1: 9.7 :  typical V1
+TV2: 7.6:  typical  V2
+TVQ : 10.9 : typical intercompartmental clearance
+TVCL : 6.9 : typical CL 
+CrCL: 0.88 : effet of CrCL on CL
+
+ETA1: 0 : Clearance (L/h)
+ETA2: 0 : central volume (L)
+
+
+$PARAM @annotated @covariates
+WT :26.7 : median current weight 
+CLCREA :148.8: median Cl creat 
+
+[OMEGA] 0.19 0.348 
+
+
+$SIGMA
+0.00 // proportional
+0.96 // additive
+
+[CMT] @annotated
+
+CENT : Central compartment [ADM, OBS]
+PERI : First peripheral compartment 
+
+$TABLE
+double DV = (CENT/V1) *(1 + EPS(1)) + EPS(2);
+
+
+[MAIN]
+
+double CL = (TVCL * pow(WT/26.7,0.75) * pow(CLCREA/148.8,CrCL)) * exp(ETA1 + ETA(1));
+double Q = TVQ ;
+double V1 = (TV1 * WT/26.5) * exp(ETA2 + ETA(2)) ;
+double V2 = TV2  * WT/26.5 ;
+
+
+
+
+[ODE]
+
+dxdt_CENT =  -(CL+Q) * CENT/V1 + Q * PERI/V2 ;
+dxdt_PERI = Q * CENT/V1 - Q * PERI/V2 ;
+
+
+[TABLE] 
+capture DV = (CENT/V1)+ EPS(1);
+int i = 0;
+while(DV<0 && i <100) {
+simeps();
+DV = (CENT/V1)+ EPS(1);
+++i;
+}
+
+$CAPTURE DV CL V2 V1 Q
+
+"
+
+
+
+
+
+
+
+my_model_beneIV <- mcode("ganciclovir_model", code_beneIV)
+
+
+my_model_beneIV %>% 
+  ev(am = 520 ,ss=1, ii=12,tinf=1) %>%
+  Req(DV) %>%
+  mrgsim(delta = 0.1, end = 24) %>% 
+  plot()
+
+my_model_beneIV %>% 
+  ev(am = 520 ,ss=1, ii=12,tinf=1) %>%
+  Req(DV,CL) %>%
+  mrgsim(delta = 0.1, end = 24) %>% 
+  plot()
+
+
+data <- expand.ev(ID = 1:10, amt = 520,ii=24, ss=1)#) #2,2.5,3, 3.5, 4
+set.seed(2345)
+sim_bene <- my_model_beneIV %>% 
+  data_set(data) %>%
+  Req(DV) %>%
+ mrgsim(delta = 1, end = 24)#%>% 
+  #f#ilter(time==24)
+  # plot()
+  #filter(time==23.9)
+
+
+```
+
+On compare aux points 0/2 hours
+
+
+```{r}
+simul_all_02 <- auc_test_lss_mapbayr_IV %>% filter(time==0  | time==2 )
+
+
+
+summary(simul_all_02)
+
+#### préparation des datas 
+simul_all_02_bis <- simul_all_02 %>% group_by(ID) %>% slice_min(time) %>%  bind_rows(simul_all_02 %>%mutate(time=ifelse(time==0,0.00001,time))) %>% arrange(ID,time) %>% 
+  # filter(dplyr::between(time,0,23)) 
+mutate( ii=24,ss=1, addl=1, evid = if_else(time==0,1,0),cmt= 1) %>% 
+  arrange(ID, time) %>% 
+  select(ID, time, amt, ii, ss, addl,SEX, Pds, evid, DV,cmt,  Clcreat,age,taille,SEX,SC_mosteller, greffe) %>% 
+  arrange(ID, time) %>% 
+  mutate(mdv = if_else(evid==1, 1, 0)) 
+
+simul_all_02_bis <- simul_all_02_bis%>% mutate( tinf=1,rate=amt/tinf)
+
+
+summary(simul_all_02_bis)
+
+
+simul_all_02_bis$ID=as.numeric(simul_all_02_bis$ID)
+simul_all_02_bis$time=as.numeric(simul_all_02_bis$time)
+
+
+simul_all_02_bis <- simul_all_02_bis %>% mutate (SEX2=case_when(SEX=="boy"~"1",SEX=="girl"~"0")) %>% select(-SEX) %>%rename(SEX=SEX2) 
+
+simul_all_02_bis$SEX=as.numeric(simul_all_02_bis$SEX)
+
+simul_all_02_bis <- simul_all_02_bis %>% rename(CLCREA=Clcreat,WT=Pds) 
+simul_all_02_bis <- simul_all_02_bis%>% select(-greffe)
+
+est_2_pt <- function(n) {my_model_beneIV %>% 
+mapbayest(simul_all_02_bis %>% filter(ID == n), hessian=FALSE) %>% as_tibble() }
+ind <- c(1:2664)
+#ind<-2
+map_2_pt_data <- map_df(ind, est_2_pt)
+
+
+
+
+
+map_2_pt_data <- map_2_pt_data %>% mutate(AUCpred= amt/CL)
+summary(map_2_pt_data)
+
+
+#### comparaison des AUC prédites avec 2 points et des AUC vrais 
+
+
+
+auc_test_lss_mapbayr_IV$ID=as.numeric(auc_test_lss_mapbayr_IV$ID)
+simul_vraiauc <- auc_test_lss_mapbayr_IV %>% filter(time==0) 
+
+map_2_pt_data_time0 <- map_2_pt_data %>% filter(time==0) 
+
+data_final_2pts<- simul_vraiauc %>% 
+  left_join(map_2_pt_data_time0 %>% select(ID, AUCpred)) 
+ 
+
+data_final_2pts <- data_final_2pts %>% select(auc,AUCpred) 
+
+
+
+data_final_2pts  %>% mutate(bias_brut = AUCpred - auc, bias_rel = (AUCpred - auc)/auc,bias_brut_sq = bias_brut*bias_brut,  bias_sq = bias_rel*bias_rel) %>% 
+  summarise(
+    mean_bias = mean(bias_rel), 
+    rmse = sqrt(mean(bias_sq)),
+    rmse_brut = sqrt(mean(bias_brut_sq)),
+    rsq = rsq_trad_vec(AUCpred, auc),
+    biais_out_20percent = mean(!dplyr::between(bias_rel, -0.2, 0.2)),
+    nb_out_20percent = sum(!dplyr::between(bias_rel, -0.2, 0.2)),
+    n = n()
+    )
+
+
+
+
+
+```
+
+
+
+nguyen model
+
+```{r}
+code_nguyen_IV <- "
+
+[PROB] #modèle Ganciclovir  Nguyen et al 2021
+
+[SET] end=100, delta=0.1
+
+[PARAM] @annotated
+
+TV1: 5.96 :  typical V1
+TV2: 1.29:  typical  V2
+TVQ : 0.222 : typical intercompartmental clearance
+TVCL : 2.55 : etypical CL 
+CRCL : 0.763 : effect ClCr deviation on CL 
+
+ETA1:0: eta CL
+ETA2:0: eta v
+
+[PARAM] @annotated @covariates
+WT :26.7 : median current weight 
+CLCREA :148.8: median Cl creat 
+
+
+[CMT] @annotated
+CENT : Central compartment  [ADM, OBS]
+PERI : First peripheral compartment 
+ 
+
+[OMEGA] 0.0556 0.0484
+
+
+
+[MAIN]
+ 
+
+double CL = TVCL*pow(WT/11.7,0.75)*pow(CLCREA/167,CRCL)*exp(ETA(1)+ ETA1);
+double Q = TVQ*pow(WT/11.7,0.75) ;
+double V1 = TV1*pow(WT/11.7,1)*exp(ETA(2) + ETA2);
+double V2 = TV2*pow(WT/11.7,1) ;
+
+
+[SIGMA] @annotated
+PROP: 0.0477 : proportionnel error 0.477
+ADD:0: additive error
+
+
+[ODE]
+
+dxdt_CENT =-(CL+Q)*CENT/V1 + Q*PERI/V2 ;
+dxdt_PERI = Q*CENT/V1 - Q*PERI/V2 ;
+
+[TABLE] 
+capture DV = (CENT/V1)* (1+ EPS(1));
+int i = 0;
+while(DV<0 && i <100) {
+simeps();
+DV = (CENT/V1)* (1+ EPS(1)) ;
+++i;
+}
+
+$CAPTURE DV CL V2 V1 Q
+
+"
+
+
+
+
+my_model_nguyen_IV <- mcode("ganciclovir_model_nguyen", code_nguyen_IV)
+
+data <- expand.ev(ID = 1:10, amt = 520,ii=12, ss=1)#) #2,2.5,3, 3.5, 4
+set.seed(2345)
+my_model_nguyen_IV %>% 
+  data_set(data) %>%
+  Req(DV) %>%
+ mrgsim(delta = 1, end = 24) %>% 
+  plot()#%>% 
+  #filter(time==12)
+  #plot()
+  #filter(time==23.9)
+```
+
+```{r}
+my_est <- my_model_nguyen_IV %>% 
+  adm_rows(time = 0, amt = 326, ss=1, ii=24) %>% 
+  obs_rows(time = 0, DV = 0.71) %>% 
+  obs_rows(time = 2, DV = 11.9) %>% 
+  add_covariates(CLCREA = 85, WT=12.5) %>% 
+  mapbayest()
+print(my_est)
+plot(my_est)
+hist(my_est) 
+#### comparaison des AUC prédites avec 3 points et des AUC vrais 
+
+
+summary(simul_all_02_bis)
+
+
+est_2_pt <- function(n) {my_model_nguyen_IV %>% 
+mapbayest(simul_all_02_bis %>% filter(ID == n), hessian=FALSE) %>% as_tibble() }
+ind <- c(1:2664)
+#ind<-2
+map_2_pt_data <- map_df(ind, est_2_pt)
+
+map_2_pt_data <- map_2_pt_data %>% mutate (AUCpred= amt/CL)
+summary(map_2_pt_data)
+
+
+
+
+
+auc_test_lss_mapbayr_IV$ID=as.numeric(auc_test_lss_mapbayr_IV$ID)
+simul_vraiauc <- auc_test_lss_mapbayr_IV %>% filter(time==0) 
+
+map_2_pt_data_time0 <- map_2_pt_data %>% filter(time==0) 
+
+data_final_2pts<- simul_vraiauc %>% 
+  left_join(map_2_pt_data_time0 %>% select(ID, AUCpred)) 
+ 
+
+data_final_2pts <- data_final_2pts %>% select(auc,AUCpred) 
+
+
+
+data_final_2pts  %>% mutate(bias_brut = AUCpred - auc, bias_rel = (AUCpred - auc)/auc,bias_brut_sq = bias_brut*bias_brut,  bias_sq = bias_rel*bias_rel) %>% 
+  summarise(
+    mean_bias = mean(bias_rel), 
+    rmse = sqrt(mean(bias_sq)),
+    rmse_brut = sqrt(mean(bias_brut_sq)),
+    rsq = rsq_trad_vec(AUCpred, auc),
+    biais_out_20percent = mean(!dplyr::between(bias_rel, -0.2, 0.2)),
+    nb_out_20percent = sum(!dplyr::between(bias_rel, -0.2, 0.2)),
+    n = n()
+    )
+
+```
+
